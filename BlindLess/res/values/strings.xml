@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">BlindLess</string>
+    <string name="hello_world">Welcome to BlindLess</string>
+    <string name="action_settings">Settings</string>
+    <string name="blindless">Blindless!</string>
+    <string name="reconocerVoz">Iniciando Reconocimiento de Voz</string>
+    <string name="escuchando">Escuchando a Genny.</string>
+    <string name="iniciarCamara">Iniciar Camara</string>
+    <string name="detectarBillete">Detectar Billete</string>
+
+</resources>
