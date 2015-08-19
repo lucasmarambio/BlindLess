@@ -16,7 +16,6 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
-import com.googlecode.tesseract.android.TessBaseAPI;
 
 public class CameraActivity extends Activity {
 
