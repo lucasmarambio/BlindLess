@@ -4,6 +4,12 @@ package com.BlindLess;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import com.BlindLess.R;
@@ -11,7 +17,11 @@ import com.BlindLess.R;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.hardware.Camera;
+import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -27,23 +37,24 @@ public class MainActivity extends Activity{
 	private Button buttonCamera;
 	private VoiceRecognition voiceRecognition;
     public Speaker speaker; 
-	
+
+    
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		try {
 			
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-
-		button = (Button)findViewById(R.id.button1);
-		buttonCamera = (Button)findViewById(R.id.buttonCamera);
-		
-		//TTS Check
-		Intent check = new Intent();
-	    check.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-	    startActivityForResult(check, TTS_CHECK);
-		
-		buttonCamera.setOnClickListener( new ButtonClickHandler() );
+			super.onCreate(savedInstanceState);
+			setContentView(R.layout.activity_main);
+	
+			button = (Button)findViewById(R.id.button1);
+			buttonCamera = (Button)findViewById(R.id.buttonCamera);
+			
+			//TTS Check
+			Intent check = new Intent();
+		    check.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+		    startActivityForResult(check, TTS_CHECK);
+			
+			buttonCamera.setOnClickListener( new ButtonClickHandler() );
 		
 //		startRecognizeSpeech();
 		
@@ -105,7 +116,7 @@ public class MainActivity extends Activity{
     
     
     @Override
- protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
      super.onActivityResult(requestCode, resultCode, data);
 
      switch (requestCode) {
@@ -131,6 +142,7 @@ public class MainActivity extends Activity{
     	 break;
          }
      }
-  }
+   }
+       
  }
     

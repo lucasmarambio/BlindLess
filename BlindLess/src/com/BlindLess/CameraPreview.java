@@ -1,9 +1,14 @@
 package com.BlindLess;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import android.content.Context;
 import android.hardware.Camera;
+import android.hardware.Camera.PictureCallback;
+import android.os.Environment;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -12,6 +17,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 	
     private SurfaceHolder mHolder;
     private Camera mCamera;
+    public static final int MEDIA_TYPE_IMAGE = 1;
+    public static final int MEDIA_TYPE_VIDEO = 2;
 
     public CameraPreview(Context context, Camera camera) {
         super(context);
@@ -67,4 +74,5 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             Log.d("ERROR", "Error starting camera preview: " + e.getMessage());
         }
     }
+   
 }
