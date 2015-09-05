@@ -37,7 +37,7 @@ public class Speaker implements OnInitListener {
 			tts.setLanguage(locSpanish);
 	        ready = true;
 
-	        this.speak("Ya me he inicializado joder");
+	        this.speak("Bienvenidos a BlindLess");
 	    }else{
 	        ready = false;
 	    }
