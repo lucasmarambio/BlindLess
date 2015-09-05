@@ -7,12 +7,14 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
+import android.util.Log;
 
 public class Speaker implements OnInitListener {
 	 
     private TextToSpeech tts;
+    public Command runOnInit;
      
-    private boolean ready = false;
+    public boolean ready = false;
      
     private boolean allowed = false;
      
@@ -38,6 +40,7 @@ public class Speaker implements OnInitListener {
 	        ready = true;
 
 	        this.speak("Bienvenidos a BlindLess");
+	        runOnInit.runCommand();
 	    }else{
 	        ready = false;
 	    }
@@ -53,6 +56,16 @@ public class Speaker implements OnInitListener {
 	        hash.put(TextToSpeech.Engine.KEY_PARAM_STREAM, 
 	                String.valueOf(AudioManager.STREAM_NOTIFICATION));
 	        tts.speak(text, TextToSpeech.QUEUE_ADD, hash);
+	        try {
+	        	while (tts.isSpeaking() ) {
+	        		Log.i("Speaker", "Waiting");
+	            };
+	            Log.i("Speaker", "Wait 1 sec");
+	            Thread.sleep(1000);
+	            Log.i("Speaker", "Stop Waiting");
+	        } catch(Exception ex) {
+	            Thread.currentThread().interrupt();
+	        }
 	    }
 	}
 	
