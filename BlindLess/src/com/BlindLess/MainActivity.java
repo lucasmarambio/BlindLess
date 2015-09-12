@@ -45,7 +45,6 @@ public class MainActivity extends Activity{
 	private Button button;
 	private Button buttonCamera;
 	private Button buttonBillete;
-	private VoiceRecognition voiceRecognition;
     public Speaker speaker; 
      
     private SpeechRecognizer mSpeechRecognizer;
