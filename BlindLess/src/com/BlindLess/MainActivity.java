@@ -39,13 +39,12 @@ public class MainActivity extends Activity{
 	private TextView field;
 	private Button button;
 	private Button buttonCamera;
-	private VoiceRecognition voiceRecognition;
     public Speaker speaker; 
     
     private SpeechRecognizer mSpeechRecognizer;
     private Intent mSpeechRecognizerIntent; 
     private boolean mIslistening; 
-    private Map<Character, Command> methodMap = new HashMap<Character, Command>();
+    private Map<String, Command> commandDictionary = new HashMap<String, Command>();
 
     
 	@Override
@@ -98,42 +97,39 @@ public class MainActivity extends Activity{
 		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
 		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-		                                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,
-		                                 this.getPackageName());
+				"es-ES");
 
 
-		SpeechRecognitionListener listener = new SpeechRecognitionListener();
+		SpeechRecognitionListener listener = 
+				new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
+										public void runCommand() { 
+											mSpeechRecognizer.destroy();
+											initializeSpeech();
+											startRecognition();
+										};
+        });
 		mSpeechRecognizer.setRecognitionListener(listener);
 	}
 	
 	
 	private void initDictionary() {
 		
-		methodMap.put('c', new Command() {
+		commandDictionary.put("camara", new Command() {
             public void runCommand() { speaker.speak("Dijiste cámara"); startRecognition(); };
         });
-		methodMap.put('i', new Command() {
+		commandDictionary.put("iniciar", new Command() {
             public void runCommand() { speaker.speak("Dijiste Iniciar"); startRecognition(); };
         });
-		methodMap.put('b', new Command() {
+		commandDictionary.put("billete", new Command() {
             public void runCommand() { speaker.speak("Dijiste billete"); startRecognition(); };
         });
-		methodMap.put('z', new Command() {
+		commandDictionary.put("nada", new Command() {
             public void runCommand() { speaker.speak("Comando de voz no reconocido"); startRecognition(); };
         });
 		
 	}
 
 
-	protected void onDestroy(Bundle savedInstanceState) {
-	
-		if (mSpeechRecognizer != null)
-		{
-		        mSpeechRecognizer.destroy();
-		}
-	}
-	
 	public void startRecognition(){
 		Log.i("Speech", "StartRecognition call");
 		if (!mIslistening)
@@ -182,87 +178,7 @@ public class MainActivity extends Activity{
      }
    }
        
-    protected class SpeechRecognitionListener implements RecognitionListener
-    {
-
-        @Override
-        public void onBeginningOfSpeech()
-        {               
-            //Log.d(TAG, "onBeginingOfSpeech"); 
-        }
-
-        @Override
-        public void onBufferReceived(byte[] buffer)
-        {
-
-        }
-
-        @Override
-        public void onEndOfSpeech()
-        {
-            //Log.d(TAG, "onEndOfSpeech");
-         }
-
-        @Override
-        public void onError(int error)
-        {
-            Log.e("Speech", "error = " + error);
-    		if (mSpeechRecognizer != null)
-    		{
-    		        mSpeechRecognizer.destroy();
-    		        initializeSpeech();
-    		        startRecognition();
-    		}
-        }
-
-        @Override
-        public void onEvent(int eventType, Bundle params)
-        {
-
-        }
-
-        @Override
-        public void onPartialResults(Bundle partialResults)
-        {
-
-        }
-
-        @Override
-        public void onReadyForSpeech(Bundle params)
-        {
-            //Log.d(TAG, "onReadyForSpeech"); //$NON-NLS-1$
-        }
-
-        @Override
-        public void onResults(Bundle results)
-        {
-            //Log.d(TAG, "onResults"); //$NON-NLS-1$
-            ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-            // matches are the return values of speech recognition engine
-            // Use these values for whatever you wish to do
-            
-            for (String string : matches) {
-            	if (string.length() > 0){
-            		Log.e("Speech", "String read = " + string);
-            		char word = string.charAt(0);
-            		if (word == 'c' || word == 'b' || word == 'i')
-            		{
-            			methodMap.get(word).runCommand();
-                		return;
-            		}
-            	}
-			}
-            methodMap.get('z').runCommand();
-        }
-
-        @Override
-        public void onRmsChanged(float rmsdB)
-        {
-        }
-    }
+    
  }
 
-interface Command {
-    void runCommand();
-}
     
