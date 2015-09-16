@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.BlindLess.R;
-import com.googlecode.tesseract.android.TessBaseAPI;
+import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
 
 import android.app.Activity;
 import android.content.Intent;
@@ -47,8 +47,6 @@ public class MainActivity extends Activity{
 			
 			super.onCreate(savedInstanceState);
 			setContentView(R.layout.activity_main);
-			
-			singleInstance = this;
 	
 			button = (Button)findViewById(R.id.button1);
 			buttonCamera = (Button)findViewById(R.id.buttonCamera);
@@ -122,10 +120,6 @@ public class MainActivity extends Activity{
 	    
 	}
 
-    public static MainActivity getInstance()
-    {
-        return singleInstance;
-    }
 	
 	//Leaving Activity methods
     private void iniciarActividadCamara() {

@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import com.BlindLess.MainActivity.ButtonClickHandler;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.hardware.Camera;
@@ -22,7 +20,6 @@ import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.FrameLayout;
