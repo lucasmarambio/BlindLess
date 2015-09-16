@@ -1,46 +1,33 @@
 package com.BlindLess;
 
 
-import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.sql.Date;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.BlindLess.R;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.hardware.Camera;
-import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
 
 public class MainActivity extends Activity{
 
-	private static final int RESULT_SPEECH = 0;
-	private static final int TTS_CHECK = 10;
-	private TextView titleBlindless;
-	private TextView field;
 	private Button button;
 	private Button buttonCamera;
+    private static MainActivity singleInstance = null;
+	
+	//text-to-speech fields
     public Speaker speaker; 
+    private static final int TTS_CHECK = 10;
     
+    //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
     private Intent mSpeechRecognizerIntent; 
     private boolean mIslistening; 
@@ -53,6 +40,8 @@ public class MainActivity extends Activity{
 			
 			super.onCreate(savedInstanceState);
 			setContentView(R.layout.activity_main);
+			
+			singleInstance = this;
 	
 			button = (Button)findViewById(R.id.button1);
 			buttonCamera = (Button)findViewById(R.id.buttonCamera);
@@ -77,7 +66,6 @@ public class MainActivity extends Activity{
 			
 			@Override
 			public void onClick(View v) {
-				// TODO Auto-generated method stub
 				if (button.getText() == getString(R.string.reconocerVoz))
 				{
 					button.setText(getString(R.string.escuchando));
@@ -91,8 +79,57 @@ public class MainActivity extends Activity{
 			}
 		});	
 	}
+	
+	@Override
+	protected void onPause() {
+	    super.onPause();  // Always call the superclass method first
 
+	    // Save the note's current draft, because the activity is stopping
+	    // and we want to be sure the current note progress isn't lost.
+	    mSpeechRecognizer.stopListening();
+	}
+	
+	@Override
+	protected void onStop() {
+	    super.onStop();  // Always call the superclass method first
 
+	    // Save the note's current draft, because the activity is stopping
+	    // and we want to be sure the current note progress isn't lost.
+	    speaker.destroy();
+	    mSpeechRecognizer.destroy();
+	}
+	
+	@Override
+	protected void onResume() {
+	    super.onResume();  // Always call the superclass method first
+	    
+	    // The activity is either being restarted or started for the first time
+	    // so this is where we should make sure that GPS is enabled
+	    if (speaker != null) speaker.speak("Usted a vuelto al menu principal");
+	    if (mSpeechRecognizer != null) mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+	    
+	}
+
+    public static MainActivity getInstance()
+    {
+        return singleInstance;
+    }
+	
+	//Leaving Activity methods
+    private void iniciarActividadCamara() {
+		speaker.speak("Iniciando cámara");
+		onActivityLeft();
+		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
+		
+		startActivity(intent);
+	}
+        
+    private void onActivityLeft() {
+		mSpeechRecognizer.destroy();
+		speaker.destroy();
+	}
+
+	//Speech Recognition necessary methods
 	private void initializeSpeech() {
 		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
 		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -115,13 +152,13 @@ public class MainActivity extends Activity{
 	private void initDictionary() {
 		
 		commandDictionary.put("camara", new Command() {
-            public void runCommand() { speaker.speak("Dijiste cámara"); startRecognition(); };
+            public void runCommand() { speaker.speak("Dijiste cámara"); iniciarActividadCamara(); startRecognition(); };
         });
 		commandDictionary.put("iniciar", new Command() {
             public void runCommand() { speaker.speak("Dijiste Iniciar"); startRecognition(); };
         });
-		commandDictionary.put("billete", new Command() {
-            public void runCommand() { speaker.speak("Dijiste billete"); startRecognition(); };
+		commandDictionary.put("detectar billete", new Command() {
+            public void runCommand() { speaker.speak("Dijiste detectar billete"); startRecognition(); };
         });
 		commandDictionary.put("nada", new Command() {
             public void runCommand() { speaker.speak("Comando de voz no reconocido"); startRecognition(); };
@@ -138,24 +175,24 @@ public class MainActivity extends Activity{
 		    mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
 		}
 	}
-	
+
+	//To remove.. buttons!
     public class ButtonClickHandler implements View.OnClickListener 
     {
     	public void onClick( View view ){
     		switch (view.getId()) {
 			case R.id.buttonCamera:
 //				SingletonTextToSpeech.getInstance(getApplicationContext()).sayHello("Iniciando Cámara");
-				speaker.speak("Iniciando cámara");
-		    	Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
-		    	startActivity(intent);
+				//iniciarActividadCamara();
 				break;
 			default:
 				break;
 			}
     	}
+
     }
-        
     
+	//Text-to-Speech necessary method to initialize for each activity.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
      super.onActivityResult(requestCode, resultCode, data);
@@ -164,7 +201,7 @@ public class MainActivity extends Activity{
      case TTS_CHECK:{
     	 Log.i("Main Activity", "TTS_Check");
     	 if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
-             speaker = new Speaker(this);
+             speaker = new Speaker(this, "Bienvenidos a BlindLess");
  		    speaker.runOnInit = new Command() {
 	            public void runCommand() { startRecognition(); };
 	        };
@@ -177,7 +214,7 @@ public class MainActivity extends Activity{
          }
      }
    }
-       
+    
     
  }
 

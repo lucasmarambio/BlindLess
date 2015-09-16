@@ -4,48 +4,63 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.Date;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+
+import com.BlindLess.MainActivity.ButtonClickHandler;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 
 public class CameraActivity extends Activity {
 
     private Camera mCamera;
     private CameraPreview mPreview;
-    private boolean mIsPreviewing;
-    private SurfaceView surfaceView;
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
-    private static final String TAG = "CamTestActivity";
-	
-	
+    
+	//text-to-speech fields
+    public Speaker speaker; 
+    private static final int TTS_CHECK = 10;
+    
+    //Speech recognition fields
+    private SpeechRecognizer mSpeechRecognizer;
+    private Intent mSpeechRecognizerIntent;
+    private boolean mIslistening;  
+    private Map<String, Command> commandDictionary = new HashMap<String, Command>();
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         
     	super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+        
+		//Init command dictionary
+		initDictionary();
+		
+		//Text to speech
+		Intent check = new Intent();
+	    check.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+	    startActivityForResult(check, TTS_CHECK);
+
+	    //Speech Recognition
+		initializeSpeech();
 
         // Create an instance of Camera
         mCamera = getCameraInstance();
@@ -67,6 +82,28 @@ public class CameraActivity extends Activity {
         
     }
     
+    @Override
+    public void onPause() {
+    	super.onPause();  // Always call the superclass method first
+
+        // Release the Camera because we don't need it when paused
+        // and other activities might need to use it.
+        if (mCamera != null) {
+            mCamera.release();
+            mCamera = null;
+        }
+    }
+    
+	@Override
+	protected void onStop() {
+	    super.onStop();  // Always call the superclass method first
+
+	    // Save the note's current draft, because the activity is stopping
+	    // and we want to be sure the current note progress isn't lost.
+	    mCamera.release();
+	}
+    
+   
     private OnTouchListener touchListener = new OnTouchListener()
     {
         @Override
@@ -186,5 +223,66 @@ public class CameraActivity extends Activity {
 		}
 	};
 
-			
+	
+	//Speech Recognition necessary methods
+	private void initializeSpeech() {
+		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+				"es-ES");
+
+
+		SpeechRecognitionListener listener = 
+				new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
+										public void runCommand() { 
+											mSpeechRecognizer.destroy();
+											initializeSpeech();
+											startRecognition();
+										};
+        });
+		mSpeechRecognizer.setRecognitionListener(listener);
+	}
+	
+	
+	private void initDictionary() {
+		
+		commandDictionary.put("volver", new Command() {
+            public void runCommand() { speaker.speak("Dijiste volver"); finish(); };
+        });
+		
+	}
+	
+	public void startRecognition(){
+		Log.i("Speech", "StartRecognition call");
+		if (!mIslistening)
+		{
+			Log.i("Speech", "Starting listening");
+		    mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+		}
+	}
+
+	
+	//Text-to-Speech necessary method to initialize for each activity.
+	@Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+     super.onActivityResult(requestCode, resultCode, data);
+
+     switch (requestCode) {
+     case TTS_CHECK:{
+    	 Log.i("Camera Activity", "TTS_Check");
+    	 if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
+    		speaker = new Speaker(this, "");
+ 		    speaker.runOnInit = new Command() {
+	            public void runCommand() { startRecognition(); };
+	        };
+         }else {
+             Intent install = new Intent();
+             install.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+             startActivity(install);
+         }
+    	 break;
+         }
+     }
+   }
+	
 }

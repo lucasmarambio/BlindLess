@@ -12,14 +12,16 @@ import android.util.Log;
 public class Speaker implements OnInitListener {
 	 
     private TextToSpeech tts;
+    private String initMsg;
     public Command runOnInit;
      
     public boolean ready = false;
      
     private boolean allowed = false;
      
-    public Speaker(Context context){
-        tts = new TextToSpeech(context, this);      
+    public Speaker(Context context, String msg){
+        tts = new TextToSpeech(context, this);    
+        initMsg = msg;
     }   
      
     public boolean isAllowed(){
@@ -39,7 +41,7 @@ public class Speaker implements OnInitListener {
 			tts.setLanguage(locSpanish);
 	        ready = true;
 
-	        this.speak("Bienvenidos a BlindLess");
+	        this.speak(this.initMsg);
 	        runOnInit.runCommand();
 	    }else{
 	        ready = false;
