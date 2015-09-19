@@ -64,6 +64,7 @@ public class CameraActivity extends Activity {
 			}			
 
 		});     
+		
         
     }
     
@@ -79,7 +80,7 @@ public class CameraActivity extends Activity {
      }; // end touchListener  
 	
 	public static Camera getCameraInstance(){
-	    Camera c = null;
+	    Camera c = null; 
 	    try {
 	        c = Camera.open(); // attempt to get a Camera instance
 	    }
@@ -115,35 +116,6 @@ public class CameraActivity extends Activity {
 		}
 	};
 	
-	private PictureCallback mPicture = new PictureCallback() {
-
-		@Override
-		public void onPictureTaken(byte[] data, Camera camera) {
-
-			File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-			if (pictureFile == null) {
-				Log.e("TAG",
-						"Error creating media file, check storage permissions: pictureFile== null");
-				return;
-			}
-
-			try {
-				FileOutputStream fos = new FileOutputStream(pictureFile);
-				fos.write(data);
-				fos.close();
-				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
-				mCamera.startPreview();
-			} catch (FileNotFoundException e) {
-				Log.e("TAG", "File not found: " + e.getMessage());
-			} catch (IOException e) {
-				Log.e("TAG", "Error accessing file: " + e.getMessage());
-			}
-		}
-		
-	};
-	
-
-
 	/** Create a File for saving an image or video */
 	private static File getOutputMediaFile(int type) {
 		// To be safe, you should check that the SDCard is mounted

@@ -58,7 +58,6 @@ public class Speaker implements OnInitListener {
 	        tts.speak(text, TextToSpeech.QUEUE_ADD, hash);
 	        try {
 	        	while (tts.isSpeaking() ) {
-	        		Log.i("Speaker", "Waiting");
 	            };
 	            Log.i("Speaker", "Wait 1 sec");
 	            Thread.sleep(1000);
