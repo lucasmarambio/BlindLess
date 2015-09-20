@@ -79,17 +79,6 @@ public class CameraActivity extends Activity {
         
     }
     
-    @Override
-    public void onPause() {
-    	super.onPause();  // Always call the superclass method first
-
-        // Release the Camera because we don't need it when paused
-        // and other activities might need to use it.
-        if (mCamera != null) {
-            mCamera.release();
-            mCamera = null;
-        }
-    }
     
 	@Override
 	protected void onStop() {
@@ -103,7 +92,6 @@ public class CameraActivity extends Activity {
 	}
 	
     
-   
     private OnTouchListener touchListener = new OnTouchListener()
     {
         @Override
@@ -122,6 +110,7 @@ public class CameraActivity extends Activity {
 	    }
 	    catch (Exception e){
 	        // Camera is not available (in use or does not exist)
+	    	Log.e("CameraActivity",e.getMessage().toString());
 	    }
 	    return c; // returns null if camera is unavailable
 	}
