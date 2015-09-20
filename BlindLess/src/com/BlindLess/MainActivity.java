@@ -5,6 +5,7 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -105,8 +106,8 @@ public class MainActivity extends Activity{
 
 	    // Save the note's current draft, because the activity is stopping
 	    // and we want to be sure the current note progress isn't lost.
-	    speaker.destroy();
-	    mSpeechRecognizer.destroy();
+	    if (speaker != null) speaker.destroy();
+	    if (mSpeechRecognizer != null) mSpeechRecognizer.destroy();
 	}
 	
 	@Override
@@ -193,11 +194,11 @@ public class MainActivity extends Activity{
     	    switch (view.getId()) {
 			case R.id.buttonCamera:
 //				SingletonTextToSpeech.getInstance(getApplicationContext()).sayHello("Iniciando Cámara");
-				//iniciarActividadCamara();
+				iniciarActividadCamara();
 				break;
 //[INICIO] Comenzando con las pruebas para detectar texto.
 			case R.id.buttonBillete:
-				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/BlindLess6.jpg";
+				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/arial16.jpg";
 				ExifInterface exif;
 				try {
 					exif = new ExifInterface(path_ocr);
@@ -242,7 +243,7 @@ public class MainActivity extends Activity{
 					TessBaseAPI baseApi = new TessBaseAPI();
 					// DATA_PATH = Path to the storage
 					// lang = for which the language data exists, usually "eng"
-					baseApi.init("/storage/sdcard0/", "eng");
+					baseApi.init("/storage/sdcard0/", "spa+eng");
 					//baseApi.init("/storage/sdcard0/tessdata/spa.traineddata", "spa");
 					// Eg. baseApi.init("/mnt/sdcard/tesseract/tessdata/eng.traineddata", "eng");
 					baseApi.setImage(bitmap);
