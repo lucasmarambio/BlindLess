@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.BlindLess.R;
-//import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
+import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
 
 import android.app.Activity;
 import android.content.Intent;
@@ -61,10 +61,10 @@ public class MainActivity extends Activity{
 		    check.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 		    startActivityForResult(check, TTS_CHECK);
 			
-//			buttonCamera.setOnClickListener( new ButtonClickHandler() );
-//			//[INICIO].
-//			buttonBillete.setOnClickListener( new ButtonClickHandler() );
-			//[FIN].
+			buttonCamera.setOnClickListener( new ButtonClickHandler() );
+			//[INICIO].
+			buttonBillete.setOnClickListener( new ButtonClickHandler() );
+//			[FIN].
 			
 			initializeSpeech();
 		    
@@ -198,84 +198,84 @@ public class MainActivity extends Activity{
 	}
 
 	//To remove.. buttons!
-//    public class ButtonClickHandler implements View.OnClickListener 
-//    {
-//    	public void onClick( View view ){
-//    		//[INICIO]    		
-//    	    String path_ocr;
-//    	    //[FIN]
-//    		
-//    	    switch (view.getId()) {
-//			case R.id.buttonCamera:
-////				SingletonTextToSpeech.getInstance(getApplicationContext()).sayHello("Iniciando Cámara");
-//				//iniciarActividadCamara();
-//				break;
-////[INICIO] Comenzando con las pruebas para detectar texto.
-//			case R.id.buttonBillete:
-//				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/BlindLess6.jpg";
-//				ExifInterface exif;
-//				try {
-//					exif = new ExifInterface(path_ocr);
-//					int exifOrientation = exif.getAttributeInt(
-//					        ExifInterface.TAG_ORIENTATION,
-//					        ExifInterface.ORIENTATION_NORMAL);
-//
-//					int rotate = 0;
-//
-//					switch (exifOrientation) {
-//					case ExifInterface.ORIENTATION_ROTATE_90:
-//					    rotate = 90;
-//					    break;
-//					case ExifInterface.ORIENTATION_ROTATE_180:
-//					    rotate = 180;
-//					    break;
-//					case ExifInterface.ORIENTATION_ROTATE_270:
-//					    rotate = 270;
-//					    break;
-//					default:
-//						break;
-//					}
-//					
-//					BitmapFactory.Options options = new BitmapFactory.Options();
-//				    options.inSampleSize = 4;
-//				    	
-//				    Bitmap bitmap = BitmapFactory.decodeFile( path_ocr, options );
-//				    //_image.setImageBitmap(bitmap);
-//					
-//					if (rotate != 0) {
-//					    int w = bitmap.getWidth();
-//					    int h = bitmap.getHeight();
-//
-//					    // Setting pre rotate
-//					    Matrix mtx = new Matrix();
-//					    mtx.preRotate(rotate);
-//
-//					    // Rotating Bitmap & convert to ARGB_8888, required by tess
-//					    bitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, false);
-//					}
-//					bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-//					TessBaseAPI baseApi = new TessBaseAPI();
-//					// DATA_PATH = Path to the storage
-//					// lang = for which the language data exists, usually "eng"
-//					baseApi.init("/storage/sdcard0/", "eng");
-//					//baseApi.init("/storage/sdcard0/tessdata/spa.traineddata", "spa");
-//					// Eg. baseApi.init("/mnt/sdcard/tesseract/tessdata/eng.traineddata", "eng");
-//					baseApi.setImage(bitmap);
-//					String recognizedText = baseApi.getUTF8Text();
-//					baseApi.end();
-//					
-//				} catch (IOException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//												
-////[FIN] Comenzando con las pruebas para detectar texto.
-//			default:
-//				break;
-//			}
-//    	}
-//
-//    }
+    public class ButtonClickHandler implements View.OnClickListener 
+    {
+    	public void onClick( View view ){
+    		//[INICIO]    		
+    	    String path_ocr;
+    	    //[FIN]
+    		
+    	    switch (view.getId()) {
+			case R.id.buttonCamera:
+//				SingletonTextToSpeech.getInstance(getApplicationContext()).sayHello("Iniciando Cámara");
+				//iniciarActividadCamara();
+				break;
+//[INICIO] Comenzando con las pruebas para detectar texto.
+			case R.id.buttonBillete:
+				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/BlindLess6.jpg";
+				ExifInterface exif;
+				try {
+					exif = new ExifInterface(path_ocr);
+					int exifOrientation = exif.getAttributeInt(
+					        ExifInterface.TAG_ORIENTATION,
+					        ExifInterface.ORIENTATION_NORMAL);
+
+					int rotate = 0;
+
+					switch (exifOrientation) {
+					case ExifInterface.ORIENTATION_ROTATE_90:
+					    rotate = 90;
+					    break;
+					case ExifInterface.ORIENTATION_ROTATE_180:
+					    rotate = 180;
+					    break;
+					case ExifInterface.ORIENTATION_ROTATE_270:
+					    rotate = 270;
+					    break;
+					default:
+						break;
+					}
+					
+					BitmapFactory.Options options = new BitmapFactory.Options();
+				    options.inSampleSize = 4;
+				    	
+				    Bitmap bitmap = BitmapFactory.decodeFile( path_ocr, options );
+				    //_image.setImageBitmap(bitmap);
+					
+					if (rotate != 0) {
+					    int w = bitmap.getWidth();
+					    int h = bitmap.getHeight();
+
+					    // Setting pre rotate
+					    Matrix mtx = new Matrix();
+					    mtx.preRotate(rotate);
+
+					    // Rotating Bitmap & convert to ARGB_8888, required by tess
+					    bitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, false);
+					}
+					bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+					TessBaseAPI baseApi = new TessBaseAPI();
+					// DATA_PATH = Path to the storage
+					// lang = for which the language data exists, usually "eng"
+					baseApi.init("/storage/sdcard0/", "eng");
+					//baseApi.init("/storage/sdcard0/tessdata/spa.traineddata", "spa");
+					// Eg. baseApi.init("/mnt/sdcard/tesseract/tessdata/eng.traineddata", "eng");
+					baseApi.setImage(bitmap);
+					String recognizedText = baseApi.getUTF8Text();
+					baseApi.end();
+					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+												
+//[FIN] Comenzando con las pruebas para detectar texto.
+			default:
+				break;
+			}
+    	}
+
+    }
     
 	//Text-to-Speech necessary method to initialize for each activity.
     @Override
