@@ -109,7 +109,7 @@ public class MainActivity extends Activity{
 
 	    // Save the note's current draft, because the activity is stopping
 	    // and we want to be sure the current note progress isn't lost.
-	    if(mSpeechRecognizer != null) {mSpeechRecognizer.stopListening(); mSpeechRecognizer.destroy();}
+	    if(mSpeechRecognizer != null) cleanSpeecher();
 	    if(speaker != null) speaker.destroy();
 	    Log.i("MainActivity","onStopLeaving()");
 	}
@@ -128,6 +128,16 @@ public class MainActivity extends Activity{
 //	    Log.i("MainActivity","onResumeLeaving");
 //	}
 	
+	private void cleanSpeecher() {
+	    if(mSpeechRecognizer !=null){
+	    	mSpeechRecognizer.stopListening();
+	    	mSpeechRecognizer.cancel();
+	    	mSpeechRecognizer.destroy();              
+
+	    }
+	    mSpeechRecognizer = null;
+	}
+
 	@Override
 	protected void onDestroy() {
 	    super.onDestroy();  // Always call the superclass method first
@@ -136,7 +146,7 @@ public class MainActivity extends Activity{
 	    // The activity is either being restarted or started for the first time
 	    // so this is where we should make sure that GPS is enabled
 	    if (speaker != null) speaker.destroy();
-	    if (mSpeechRecognizer != null) mSpeechRecognizer.destroy();
+	    if (mSpeechRecognizer != null) cleanSpeecher();
 	    Log.i("MainActivity","onDestroyLeaving");
 	}
 

@@ -87,12 +87,23 @@ public class CameraActivity extends Activity {
 	    // Save the note's current draft, because the activity is stopping
 	    // and we want to be sure the current note progress isn't lost.
 	    if(mCamera != null) mCamera.release();
-	    if(mSpeechRecognizer != null) {mSpeechRecognizer.stopListening(); mSpeechRecognizer.destroy();}
+	    if(mSpeechRecognizer != null) cleanSpeecher();
 	    if(speaker != null) speaker.destroy();
 	}
 	
     
-    private OnTouchListener touchListener = new OnTouchListener()
+    private void cleanSpeecher() {
+    	if(mSpeechRecognizer !=null){
+	    	mSpeechRecognizer.stopListening();
+	    	mSpeechRecognizer.cancel();
+	    	mSpeechRecognizer.destroy();              
+
+	    }
+	    mSpeechRecognizer = null;
+	}
+
+
+	private OnTouchListener touchListener = new OnTouchListener()
     {
         @Override
         public boolean onTouch(View v, MotionEvent event) 
