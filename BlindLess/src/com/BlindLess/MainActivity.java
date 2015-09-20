@@ -34,6 +34,7 @@ public class MainActivity extends Activity{
 	//text-to-speech fields
     public Speaker speaker; 
     private static final int TTS_CHECK = 10;
+    private static final int CAMERA_ACTIVITY = 99;
     
     //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
@@ -64,7 +65,7 @@ public class MainActivity extends Activity{
 			buttonCamera.setOnClickListener( new ButtonClickHandler() );
 			//[INICIO].
 			buttonBillete.setOnClickListener( new ButtonClickHandler() );
-			//[FIN].
+//			[FIN].
 			
 			initializeSpeech();
 		    
@@ -91,54 +92,66 @@ public class MainActivity extends Activity{
 		});	
 	}
 	
-	@Override
-	protected void onPause() {
-	    super.onPause();  // Always call the superclass method first
-
-	    // Save the note's current draft, because the activity is stopping
-	    // and we want to be sure the current note progress isn't lost.
-	    mSpeechRecognizer.stopListening();
-	}
-	
+//	@Override
+//	protected void onPause() {
+//	    super.onPause();  // Always call the superclass method first
+//	    Log.i("MainActivity","onPause()");
+//
+//	    // Save the note's current draft, because the activity is stopping
+//	    // and we want to be sure the current note progress isn't lost.
+//	    mSpeechRecognizer.stopListening();
+//	    Log.i("MainActivity","onPauseLeaving()");
+//	}
+//	
 	@Override
 	protected void onStop() {
 	    super.onStop();  // Always call the superclass method first
+	    Log.i("MainActivity","onStop()");
 
 	    // Save the note's current draft, because the activity is stopping
 	    // and we want to be sure the current note progress isn't lost.
-	    if (speaker != null) speaker.destroy();
-	    if (mSpeechRecognizer != null) mSpeechRecognizer.destroy();
+	    if(mSpeechRecognizer != null) {mSpeechRecognizer.stopListening(); mSpeechRecognizer.destroy();}
+	    if(speaker != null) speaker.destroy();
+	    Log.i("MainActivity","onStopLeaving()");
 	}
 	
+//	@Override
+//	protected void onResume() {
+//	    super.onResume();  // Always call the superclass method first
+//	    Log.i("MainActivity","onResume()");
+//	    
+//	    // The activity is either being restarted or started for the first time
+//	    // so this is where we should make sure that GPS is enabled
+//	    if (speaker != null){
+//	    	speaker.speak("Usted a vuelto al menu principal");
+//	    	startRecognition();
+//	    }
+//	    Log.i("MainActivity","onResumeLeaving");
+//	}
+	
 	@Override
-	protected void onResume() {
-	    super.onResume();  // Always call the superclass method first
+	protected void onDestroy() {
+	    super.onDestroy();  // Always call the superclass method first
+	    Log.i("MainActivity","onDestroy()");
 	    
 	    // The activity is either being restarted or started for the first time
 	    // so this is where we should make sure that GPS is enabled
-	    if (speaker != null) speaker.speak("Usted a vuelto al menu principal");
-	    if (mSpeechRecognizer != null) mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
-	    
+	    if (speaker != null) speaker.destroy();
+	    if (mSpeechRecognizer != null) mSpeechRecognizer.destroy();
+	    Log.i("MainActivity","onDestroyLeaving");
 	}
 
 	
 	//Leaving Activity methods
     private void iniciarActividadCamara() {
 		speaker.speak("Iniciando cámara");
-		onActivityLeft();
 		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
-		
-		startActivity(intent);
-	}
-        
-    private void onActivityLeft() {
-		mSpeechRecognizer.destroy();
-		speaker.destroy();
+		startActivityForResult(intent, CAMERA_ACTIVITY);
 	}
 
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
-		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
 		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
 				"es-ES");
@@ -147,7 +160,7 @@ public class MainActivity extends Activity{
 		SpeechRecognitionListener listener = 
 				new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
 										public void runCommand() { 
-											mSpeechRecognizer.destroy();
+											if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
 											initializeSpeech();
 											startRecognition();
 										};
@@ -170,7 +183,9 @@ public class MainActivity extends Activity{
 		commandDictionary.put("nada", new Command() {
             public void runCommand() { speaker.speak("Comando de voz no reconocido"); startRecognition(); };
         });
-		
+		commandDictionary.put("salir", new Command() {
+            public void runCommand() { speaker.speak("Dijiste salir"); finish(); };
+        });
 	}
 
 
@@ -270,19 +285,28 @@ public class MainActivity extends Activity{
 
      switch (requestCode) {
      case TTS_CHECK:{
-    	 Log.i("Main Activity", "TTS_Check");
-    	 if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
-             speaker = new Speaker(this, "Bienvenidos a BlindLess");
- 		    speaker.runOnInit = new Command() {
+	    	 Log.i("Main Activity", "TTS_Check");
+	    	 if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
+	             speaker = new Speaker(this, "Bienvenidos a BlindLess");
+	 		    speaker.runOnInit = new Command() {
+		            public void runCommand() { startRecognition(); };
+		        };
+	         }else {
+	             Intent install = new Intent();
+	             install.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+	             startActivity(install);
+	         }
+	    	 break;
+         }
+     case CAMERA_ACTIVITY:{
+    	 speaker = new Speaker(this, "Usted a vuelto al menu principal");
+		    speaker.runOnInit = new Command() {
 	            public void runCommand() { startRecognition(); };
 	        };
-         }else {
-             Intent install = new Intent();
-             install.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-             startActivity(install);
-         }
+	    
+		    initializeSpeech();
     	 break;
-         }
+     }
      }
    }
     

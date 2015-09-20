@@ -80,17 +80,6 @@ public class CameraActivity extends Activity {
         
     }
     
-    @Override
-    public void onPause() {
-    	super.onPause();  // Always call the superclass method first
-
-        // Release the Camera because we don't need it when paused
-        // and other activities might need to use it.
-        if (mCamera != null) {
-            mCamera.release();
-            mCamera = null;
-        }
-    }
     
 	@Override
 	protected void onStop() {
@@ -98,10 +87,12 @@ public class CameraActivity extends Activity {
 
 	    // Save the note's current draft, because the activity is stopping
 	    // and we want to be sure the current note progress isn't lost.
-	    mCamera.release();
+	    if(mCamera != null) mCamera.release();
+	    if(mSpeechRecognizer != null) {mSpeechRecognizer.stopListening(); mSpeechRecognizer.destroy();}
+	    if(speaker != null) speaker.destroy();
 	}
+	
     
-   
     private OnTouchListener touchListener = new OnTouchListener()
     {
         @Override
@@ -120,6 +111,7 @@ public class CameraActivity extends Activity {
 	    }
 	    catch (Exception e){
 	        // Camera is not available (in use or does not exist)
+	    	Log.e("CameraActivity",e.getMessage().toString());
 	    }
 	    return c; // returns null if camera is unavailable
 	}
@@ -195,7 +187,7 @@ public class CameraActivity extends Activity {
 	
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
-		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(CameraActivity.this);
 		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
 				"es-ES");
@@ -216,7 +208,15 @@ public class CameraActivity extends Activity {
 	private void initDictionary() {
 		
 		commandDictionary.put("volver", new Command() {
-            public void runCommand() { speaker.speak("Dijiste volver"); finish(); };
+            public void runCommand() { 
+            	speaker.speak("Dijiste volver"); 
+            	setResult(Activity.RESULT_OK);
+            	finish();
+            	};
+        });
+		
+		commandDictionary.put("nada", new Command() {
+            public void runCommand() { speaker.speak("Comando de voz no reconocido"); startRecognition(); };
         });
 		
 	}
