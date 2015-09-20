@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.BlindLess.R;
-import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
+//import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
 
 import android.app.Activity;
 import android.content.Intent;
@@ -33,6 +33,7 @@ public class MainActivity extends Activity{
 	//text-to-speech fields
     public Speaker speaker; 
     private static final int TTS_CHECK = 10;
+    private static final int CAMERA_ACTIVITY = 99;
     
     //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
@@ -60,9 +61,9 @@ public class MainActivity extends Activity{
 		    check.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 		    startActivityForResult(check, TTS_CHECK);
 			
-			buttonCamera.setOnClickListener( new ButtonClickHandler() );
-			//[INICIO].
-			buttonBillete.setOnClickListener( new ButtonClickHandler() );
+//			buttonCamera.setOnClickListener( new ButtonClickHandler() );
+//			//[INICIO].
+//			buttonBillete.setOnClickListener( new ButtonClickHandler() );
 			//[FIN].
 			
 			initializeSpeech();
@@ -90,54 +91,66 @@ public class MainActivity extends Activity{
 		});	
 	}
 	
-	@Override
-	protected void onPause() {
-	    super.onPause();  // Always call the superclass method first
-
-	    // Save the note's current draft, because the activity is stopping
-	    // and we want to be sure the current note progress isn't lost.
-	    mSpeechRecognizer.stopListening();
-	}
-	
+//	@Override
+//	protected void onPause() {
+//	    super.onPause();  // Always call the superclass method first
+//	    Log.i("MainActivity","onPause()");
+//
+//	    // Save the note's current draft, because the activity is stopping
+//	    // and we want to be sure the current note progress isn't lost.
+//	    mSpeechRecognizer.stopListening();
+//	    Log.i("MainActivity","onPauseLeaving()");
+//	}
+//	
 	@Override
 	protected void onStop() {
 	    super.onStop();  // Always call the superclass method first
+	    Log.i("MainActivity","onStop()");
 
 	    // Save the note's current draft, because the activity is stopping
 	    // and we want to be sure the current note progress isn't lost.
-	    speaker.destroy();
-	    mSpeechRecognizer.destroy();
+	    if(mSpeechRecognizer != null) {mSpeechRecognizer.stopListening(); mSpeechRecognizer.destroy();}
+	    if(speaker != null) speaker.destroy();
+	    Log.i("MainActivity","onStopLeaving()");
 	}
 	
+//	@Override
+//	protected void onResume() {
+//	    super.onResume();  // Always call the superclass method first
+//	    Log.i("MainActivity","onResume()");
+//	    
+//	    // The activity is either being restarted or started for the first time
+//	    // so this is where we should make sure that GPS is enabled
+//	    if (speaker != null){
+//	    	speaker.speak("Usted a vuelto al menu principal");
+//	    	startRecognition();
+//	    }
+//	    Log.i("MainActivity","onResumeLeaving");
+//	}
+	
 	@Override
-	protected void onResume() {
-	    super.onResume();  // Always call the superclass method first
+	protected void onDestroy() {
+	    super.onDestroy();  // Always call the superclass method first
+	    Log.i("MainActivity","onDestroy()");
 	    
 	    // The activity is either being restarted or started for the first time
 	    // so this is where we should make sure that GPS is enabled
-	    if (speaker != null) speaker.speak("Usted a vuelto al menu principal");
-	    if (mSpeechRecognizer != null) mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
-	    
+	    if (speaker != null) speaker.destroy();
+	    if (mSpeechRecognizer != null) mSpeechRecognizer.destroy();
+	    Log.i("MainActivity","onDestroyLeaving");
 	}
 
 	
 	//Leaving Activity methods
     private void iniciarActividadCamara() {
 		speaker.speak("Iniciando cámara");
-		onActivityLeft();
 		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
-		
-		startActivity(intent);
-	}
-        
-    private void onActivityLeft() {
-		mSpeechRecognizer.destroy();
-		speaker.destroy();
+		startActivityForResult(intent, CAMERA_ACTIVITY);
 	}
 
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
-		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
 		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
 				"es-ES");
@@ -146,7 +159,7 @@ public class MainActivity extends Activity{
 		SpeechRecognitionListener listener = 
 				new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
 										public void runCommand() { 
-											mSpeechRecognizer.destroy();
+											if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
 											initializeSpeech();
 											startRecognition();
 										};
@@ -169,7 +182,9 @@ public class MainActivity extends Activity{
 		commandDictionary.put("nada", new Command() {
             public void runCommand() { speaker.speak("Comando de voz no reconocido"); startRecognition(); };
         });
-		
+		commandDictionary.put("salir", new Command() {
+            public void runCommand() { speaker.speak("Dijiste salir"); finish(); };
+        });
 	}
 
 
@@ -183,84 +198,84 @@ public class MainActivity extends Activity{
 	}
 
 	//To remove.. buttons!
-    public class ButtonClickHandler implements View.OnClickListener 
-    {
-    	public void onClick( View view ){
-    		//[INICIO]    		
-    	    String path_ocr;
-    	    //[FIN]
-    		
-    	    switch (view.getId()) {
-			case R.id.buttonCamera:
-//				SingletonTextToSpeech.getInstance(getApplicationContext()).sayHello("Iniciando Cámara");
-				//iniciarActividadCamara();
-				break;
-//[INICIO] Comenzando con las pruebas para detectar texto.
-			case R.id.buttonBillete:
-				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/BlindLess6.jpg";
-				ExifInterface exif;
-				try {
-					exif = new ExifInterface(path_ocr);
-					int exifOrientation = exif.getAttributeInt(
-					        ExifInterface.TAG_ORIENTATION,
-					        ExifInterface.ORIENTATION_NORMAL);
-
-					int rotate = 0;
-
-					switch (exifOrientation) {
-					case ExifInterface.ORIENTATION_ROTATE_90:
-					    rotate = 90;
-					    break;
-					case ExifInterface.ORIENTATION_ROTATE_180:
-					    rotate = 180;
-					    break;
-					case ExifInterface.ORIENTATION_ROTATE_270:
-					    rotate = 270;
-					    break;
-					default:
-						break;
-					}
-					
-					BitmapFactory.Options options = new BitmapFactory.Options();
-				    options.inSampleSize = 4;
-				    	
-				    Bitmap bitmap = BitmapFactory.decodeFile( path_ocr, options );
-				    //_image.setImageBitmap(bitmap);
-					
-					if (rotate != 0) {
-					    int w = bitmap.getWidth();
-					    int h = bitmap.getHeight();
-
-					    // Setting pre rotate
-					    Matrix mtx = new Matrix();
-					    mtx.preRotate(rotate);
-
-					    // Rotating Bitmap & convert to ARGB_8888, required by tess
-					    bitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, false);
-					}
-					bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-					TessBaseAPI baseApi = new TessBaseAPI();
-					// DATA_PATH = Path to the storage
-					// lang = for which the language data exists, usually "eng"
-					baseApi.init("/storage/sdcard0/", "eng");
-					//baseApi.init("/storage/sdcard0/tessdata/spa.traineddata", "spa");
-					// Eg. baseApi.init("/mnt/sdcard/tesseract/tessdata/eng.traineddata", "eng");
-					baseApi.setImage(bitmap);
-					String recognizedText = baseApi.getUTF8Text();
-					baseApi.end();
-					
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-												
-//[FIN] Comenzando con las pruebas para detectar texto.
-			default:
-				break;
-			}
-    	}
-
-    }
+//    public class ButtonClickHandler implements View.OnClickListener 
+//    {
+//    	public void onClick( View view ){
+//    		//[INICIO]    		
+//    	    String path_ocr;
+//    	    //[FIN]
+//    		
+//    	    switch (view.getId()) {
+//			case R.id.buttonCamera:
+////				SingletonTextToSpeech.getInstance(getApplicationContext()).sayHello("Iniciando Cámara");
+//				//iniciarActividadCamara();
+//				break;
+////[INICIO] Comenzando con las pruebas para detectar texto.
+//			case R.id.buttonBillete:
+//				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/BlindLess6.jpg";
+//				ExifInterface exif;
+//				try {
+//					exif = new ExifInterface(path_ocr);
+//					int exifOrientation = exif.getAttributeInt(
+//					        ExifInterface.TAG_ORIENTATION,
+//					        ExifInterface.ORIENTATION_NORMAL);
+//
+//					int rotate = 0;
+//
+//					switch (exifOrientation) {
+//					case ExifInterface.ORIENTATION_ROTATE_90:
+//					    rotate = 90;
+//					    break;
+//					case ExifInterface.ORIENTATION_ROTATE_180:
+//					    rotate = 180;
+//					    break;
+//					case ExifInterface.ORIENTATION_ROTATE_270:
+//					    rotate = 270;
+//					    break;
+//					default:
+//						break;
+//					}
+//					
+//					BitmapFactory.Options options = new BitmapFactory.Options();
+//				    options.inSampleSize = 4;
+//				    	
+//				    Bitmap bitmap = BitmapFactory.decodeFile( path_ocr, options );
+//				    //_image.setImageBitmap(bitmap);
+//					
+//					if (rotate != 0) {
+//					    int w = bitmap.getWidth();
+//					    int h = bitmap.getHeight();
+//
+//					    // Setting pre rotate
+//					    Matrix mtx = new Matrix();
+//					    mtx.preRotate(rotate);
+//
+//					    // Rotating Bitmap & convert to ARGB_8888, required by tess
+//					    bitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, false);
+//					}
+//					bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+//					TessBaseAPI baseApi = new TessBaseAPI();
+//					// DATA_PATH = Path to the storage
+//					// lang = for which the language data exists, usually "eng"
+//					baseApi.init("/storage/sdcard0/", "eng");
+//					//baseApi.init("/storage/sdcard0/tessdata/spa.traineddata", "spa");
+//					// Eg. baseApi.init("/mnt/sdcard/tesseract/tessdata/eng.traineddata", "eng");
+//					baseApi.setImage(bitmap);
+//					String recognizedText = baseApi.getUTF8Text();
+//					baseApi.end();
+//					
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//												
+////[FIN] Comenzando con las pruebas para detectar texto.
+//			default:
+//				break;
+//			}
+//    	}
+//
+//    }
     
 	//Text-to-Speech necessary method to initialize for each activity.
     @Override
@@ -269,19 +284,28 @@ public class MainActivity extends Activity{
 
      switch (requestCode) {
      case TTS_CHECK:{
-    	 Log.i("Main Activity", "TTS_Check");
-    	 if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
-             speaker = new Speaker(this, "Bienvenidos a BlindLess");
- 		    speaker.runOnInit = new Command() {
+	    	 Log.i("Main Activity", "TTS_Check");
+	    	 if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
+	             speaker = new Speaker(this, "Bienvenidos a BlindLess");
+	 		    speaker.runOnInit = new Command() {
+		            public void runCommand() { startRecognition(); };
+		        };
+	         }else {
+	             Intent install = new Intent();
+	             install.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+	             startActivity(install);
+	         }
+	    	 break;
+         }
+     case CAMERA_ACTIVITY:{
+    	 speaker = new Speaker(this, "Usted a vuelto al menu principal");
+		    speaker.runOnInit = new Command() {
 	            public void runCommand() { startRecognition(); };
 	        };
-         }else {
-             Intent install = new Intent();
-             install.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-             startActivity(install);
-         }
+	    
+		    initializeSpeech();
     	 break;
-         }
+     }
      }
    }
     
