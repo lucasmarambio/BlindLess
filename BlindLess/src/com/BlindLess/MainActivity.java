@@ -241,7 +241,7 @@ public class MainActivity extends Activity{
 				break;
 //[INICIO] Comenzando con las pruebas para detectar texto.
 			case R.id.buttonBillete:
-				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/BlindLess.jpg";
+				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/BlindLess7.jpg";
 				ExifInterface exif;
 				try {
 					exif = new ExifInterface(path_ocr);
@@ -288,7 +288,7 @@ public class MainActivity extends Activity{
 					// lang = for which the language data exists, usually "eng"
 					//baseApi.init("/storage/sdcard0/", "eng");
 					//baseApi.init("/storage/sdcard0/tessdata/spa.traineddata", "spa");
-					baseApi.init("/storage/sdcard0/", "spa");
+					baseApi.init("/storage/sdcard0/TrainData", "spa");
 					// Eg. baseApi.init("/mnt/sdcard/tesseract/tessdata/eng.traineddata", "eng");
 					baseApi.setImage(bitmap);
 					String recognizedText = baseApi.getUTF8Text();
