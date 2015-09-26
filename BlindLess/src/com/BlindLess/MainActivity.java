@@ -114,19 +114,21 @@ public class MainActivity extends Activity{
 	    Log.i("MainActivity","onStopLeaving()");
 	}
 	
-//	@Override
-//	protected void onResume() {
-//	    super.onResume();  // Always call the superclass method first
-//	    Log.i("MainActivity","onResume()");
-//	    
-//	    // The activity is either being restarted or started for the first time
-//	    // so this is where we should make sure that GPS is enabled
-//	    if (speaker != null){
-//	    	speaker.speak("Usted a vuelto al menu principal");
-//	    	startRecognition();
-//	    }
-//	    Log.i("MainActivity","onResumeLeaving");
-//	}
+	@Override
+	protected void onRestart() {
+	    super.onRestart();  // Always call the superclass method first
+	    Log.i("MainActivity","onRestart()");
+	    
+	    // The activity is either being restarted or started for the first time
+	    // so this is where we should make sure that GPS is enabled
+	    speaker = new Speaker(this, "");
+	    speaker.runOnInit = new Command() {
+            public void runCommand() { startRecognition(); };
+        };
+    
+	    initializeSpeech();
+	    Log.i("MainActivity","onRestartLeaving");
+	}
 	
 	private void cleanSpeecher() {
 	    if(mSpeechRecognizer !=null){
@@ -308,6 +310,12 @@ public class MainActivity extends Activity{
 	    	 break;
          }
      case CAMERA_ACTIVITY:{
+    	 if (resultCode == Activity.RESULT_CANCELED) {
+    		 this.commandDictionary.get("salir").runCommand();
+    		 break;
+    	 }
+    	 
+    	 //Reinitialize services
     	 speaker = new Speaker(this, "Usted a vuelto al menu principal");
 		    speaker.runOnInit = new Command() {
 	            public void runCommand() { startRecognition(); };

@@ -220,6 +220,7 @@ public class CameraActivity extends Activity {
 		@Override
 		public void onShutter() {
 			// Do nothing
+			Log.i("CameraActivity","onShutter");
 		}
 	};
 
@@ -250,6 +251,14 @@ public class CameraActivity extends Activity {
             public void runCommand() { 
             	speaker.speak("Dijiste volver"); 
             	setResult(Activity.RESULT_OK);
+            	finish();
+            	};
+        });
+		
+		commandDictionary.put("salir", new Command() {
+            public void runCommand() { 
+            	speaker.speak("Dijiste salir"); 
+            	setResult(Activity.RESULT_CANCELED);
             	finish();
             	};
         });
