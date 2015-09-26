@@ -110,7 +110,7 @@ public class MainActivity extends Activity{
 
 	    // Save the note's current draft, because the activity is stopping
 	    // and we want to be sure the current note progress isn't lost.
-	    if(mSpeechRecognizer != null) {mSpeechRecognizer.stopListening(); mSpeechRecognizer.destroy();}
+	    if(mSpeechRecognizer != null) cleanSpeecher();
 	    if(speaker != null) speaker.destroy();
 	    Log.i("MainActivity","onStopLeaving()");
 	}
@@ -137,7 +137,7 @@ public class MainActivity extends Activity{
 	    // The activity is either being restarted or started for the first time
 	    // so this is where we should make sure that GPS is enabled
 	    if (speaker != null) speaker.destroy();
-	    if (mSpeechRecognizer != null) mSpeechRecognizer.destroy();
+	    if (mSpeechRecognizer != null) cleanSpeecher();
 	    Log.i("MainActivity","onDestroyLeaving");
 	}
 
@@ -148,6 +148,16 @@ public class MainActivity extends Activity{
 		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
 		startActivityForResult(intent, CAMERA_ACTIVITY);
 	}
+    
+    private void cleanSpeecher() {
+   	if(mSpeechRecognizer !=null){
+    mSpeechRecognizer.stopListening();
+    mSpeechRecognizer.cancel();
+    mSpeechRecognizer.destroy();              
+
+   }
+   mSpeechRecognizer = null;
+}
 
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
@@ -213,7 +223,7 @@ public class MainActivity extends Activity{
 				break;
 //[INICIO] Comenzando con las pruebas para detectar texto.
 			case R.id.buttonBillete:
-				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/arial16.jpg";
+				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/arial14.jpg";
 				ExifInterface exif;
 				try {
 					exif = new ExifInterface(path_ocr);
