@@ -115,20 +115,32 @@ public class MainActivity extends Activity{
 	    Log.i("MainActivity","onStopLeaving()");
 	}
 	
-//	@Override
-//	protected void onResume() {
-//	    super.onResume();  // Always call the superclass method first
-//	    Log.i("MainActivity","onResume()");
-//	    
-//	    // The activity is either being restarted or started for the first time
-//	    // so this is where we should make sure that GPS is enabled
-//	    if (speaker != null){
-//	    	speaker.speak("Usted a vuelto al menu principal");
-//	    	startRecognition();
-//	    }
-//	    Log.i("MainActivity","onResumeLeaving");
-//	}
+	@Override
+	protected void onRestart() {
+	    super.onRestart();  // Always call the superclass method first
+	    Log.i("MainActivity","onRestart()");
+	    
+	    // The activity is either being restarted or started for the first time
+	    // so this is where we should make sure that GPS is enabled
+	    speaker = new Speaker(this, "");
+	    speaker.runOnInit = new Command() {
+            public void runCommand() { startRecognition(); };
+        };
+    
+	    initializeSpeech();
+	    Log.i("MainActivity","onRestartLeaving");
+	}
 	
+	private void cleanSpeecher() {
+	    if(mSpeechRecognizer !=null){
+	    	mSpeechRecognizer.stopListening();
+	    	mSpeechRecognizer.cancel();
+	    	mSpeechRecognizer.destroy();              
+
+	    }
+	    mSpeechRecognizer = null;
+	}
+
 	@Override
 	protected void onDestroy() {
 	    super.onDestroy();  // Always call the superclass method first
@@ -182,19 +194,35 @@ public class MainActivity extends Activity{
 	private void initDictionary() {
 		
 		commandDictionary.put("camara", new Command() {
-            public void runCommand() { speaker.speak("Dijiste cámara"); iniciarActividadCamara(); startRecognition(); };
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Dijiste cámara"); 
+            	iniciarActividadCamara(); 
+            	startRecognition(); 
+            	};
         });
 		commandDictionary.put("iniciar", new Command() {
-            public void runCommand() { speaker.speak("Dijiste Iniciar"); startRecognition(); };
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Dijiste Iniciar"); 
+            	startRecognition(); 
+        	};
         });
 		commandDictionary.put("detectar billete", new Command() {
-            public void runCommand() { speaker.speak("Dijiste detectar billete"); startRecognition(); };
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Dijiste detectar billete"); 
+            	startRecognition(); 
+        	};
         });
 		commandDictionary.put("nada", new Command() {
-            public void runCommand() { speaker.speak("Comando de voz no reconocido"); startRecognition(); };
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Comando de voz no reconocido"); 
+            	startRecognition(); 
+        	};
         });
 		commandDictionary.put("salir", new Command() {
-            public void runCommand() { speaker.speak("Dijiste salir"); finish(); };
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Dijiste salir"); 
+            	finish(); 
+        	};
         });
 	}
 
@@ -309,6 +337,12 @@ public class MainActivity extends Activity{
 	    	 break;
          }
      case CAMERA_ACTIVITY:{
+    	 if (resultCode == Activity.RESULT_CANCELED) {
+    		 finish();
+    		 break;
+    	 }
+    	 
+    	 //Reinitialize services
     	 speaker = new Speaker(this, "Usted a vuelto al menu principal");
 		    speaker.runOnInit = new Command() {
 	            public void runCommand() { startRecognition(); };
