@@ -183,19 +183,35 @@ public class MainActivity extends Activity{
 	private void initDictionary() {
 		
 		commandDictionary.put("camara", new Command() {
-            public void runCommand() { speaker.speak("Dijiste cámara"); iniciarActividadCamara(); startRecognition(); };
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Dijiste cámara"); 
+            	iniciarActividadCamara(); 
+            	startRecognition(); 
+            	};
         });
 		commandDictionary.put("iniciar", new Command() {
-            public void runCommand() { speaker.speak("Dijiste Iniciar"); startRecognition(); };
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Dijiste Iniciar"); 
+            	startRecognition(); 
+        	};
         });
 		commandDictionary.put("detectar billete", new Command() {
-            public void runCommand() { speaker.speak("Dijiste detectar billete"); startRecognition(); };
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Dijiste detectar billete"); 
+            	startRecognition(); 
+        	};
         });
 		commandDictionary.put("nada", new Command() {
-            public void runCommand() { speaker.speak("Comando de voz no reconocido"); startRecognition(); };
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Comando de voz no reconocido"); 
+            	startRecognition(); 
+        	};
         });
 		commandDictionary.put("salir", new Command() {
-            public void runCommand() { speaker.speak("Dijiste salir"); finish(); };
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Dijiste salir"); 
+            	finish(); 
+        	};
         });
 	}
 
@@ -311,7 +327,7 @@ public class MainActivity extends Activity{
          }
      case CAMERA_ACTIVITY:{
     	 if (resultCode == Activity.RESULT_CANCELED) {
-    		 this.commandDictionary.get("salir").runCommand();
+    		 finish();
     		 break;
     	 }
     	 

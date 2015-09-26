@@ -66,8 +66,8 @@ public class Speaker implements OnInitListener {
 	        	while (tts.isSpeaking() ) {
 //	        		Log.i("Speaker", "Waiting");
 	            };
-	            Log.i("Speaker", "Wait 1 sec");
-	            Thread.sleep(1000);
+	            Log.i("Speaker", "Wait 0.2 sec");
+	            Thread.sleep(200);
 	            Log.i("Speaker", "Stop Waiting");
 	        } catch(Exception ex) {
 	            Thread.currentThread().interrupt();

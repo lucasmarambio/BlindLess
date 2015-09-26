@@ -56,16 +56,7 @@ public class CameraActivity extends Activity {
 	    check.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 	    startActivityForResult(check, TTS_CHECK);
 
-	    //Speech Recognition
-		initializeSpeech();
-
-        // Create an instance of Camera
-        mCamera = getCameraInstance();
-
-        // Create our Preview view and set it as the content of our activity.
-        mPreview = new CameraPreview(this, mCamera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(mPreview);
+	    FrameLayout preview = initializeServices();
               
 		preview.setOnTouchListener(new View.OnTouchListener() {
 			
@@ -78,6 +69,21 @@ public class CameraActivity extends Activity {
 		});     
         
     }
+
+
+	private FrameLayout initializeServices() {
+		//Speech Recognition
+		initializeSpeech();
+
+        // Create an instance of Camera
+		if (mCamera == null) mCamera = getCameraInstance();
+
+        // Create our Preview view and set it as the content of our activity.
+		if (mPreview == null) mPreview = new CameraPreview(this, mCamera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.addView(mPreview);
+		return preview;
+	}
     
     
 	@Override
@@ -91,6 +97,13 @@ public class CameraActivity extends Activity {
 	    if(speaker != null) speaker.destroy();
 	}
 	
+	@Override
+	protected void onRestart() {
+	    super.onRestart();  // Always call the superclass method first
+
+//	    initializeServices();
+	    
+	}
     
     private void cleanSpeecher() {
     	if(mSpeechRecognizer !=null){
@@ -249,7 +262,7 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put("volver", new Command() {
             public void runCommand() { 
-            	speaker.speak("Dijiste volver"); 
+            	if(speaker != null) speaker.speak("Dijiste volver"); 
             	setResult(Activity.RESULT_OK);
             	finish();
             	};
@@ -257,14 +270,17 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put("salir", new Command() {
             public void runCommand() { 
-            	speaker.speak("Dijiste salir"); 
+            	if(speaker != null) speaker.speak("Dijiste salir"); 
             	setResult(Activity.RESULT_CANCELED);
             	finish();
             	};
         });
 		
 		commandDictionary.put("nada", new Command() {
-            public void runCommand() { speaker.speak("Comando de voz no reconocido"); startRecognition(); };
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Comando de voz no reconocido"); 
+            	startRecognition(); 
+            	};
         });
 		
 	}
