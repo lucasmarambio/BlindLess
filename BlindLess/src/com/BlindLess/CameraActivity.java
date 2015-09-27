@@ -106,16 +106,6 @@ public class CameraActivity extends Activity {
 	    
 	}
     
-    private void cleanSpeecher() {
-    	if(mSpeechRecognizer !=null){
-	    	mSpeechRecognizer.stopListening();
-	    	mSpeechRecognizer.cancel();
-	    	mSpeechRecognizer.destroy();              
-
-	    }
-	    mSpeechRecognizer = null;
-	}
-
 
 	private OnTouchListener touchListener = new OnTouchListener()
     {

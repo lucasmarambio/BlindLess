@@ -157,19 +157,10 @@ public class MainActivity extends Activity{
 	//Leaving Activity methods
     private void iniciarActividadCamara() {
 		speaker.speak("Iniciando cámara");
-		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
+		Intent intent = new Intent(getApplicationContext(), CameraActivityOpenCV.class );
 		startActivityForResult(intent, CAMERA_ACTIVITY);
 	}
     
-    private void cleanSpeecher() {
-   	if(mSpeechRecognizer !=null){
-    mSpeechRecognizer.stopListening();
-    mSpeechRecognizer.cancel();
-    mSpeechRecognizer.destroy();              
-
-   }
-   mSpeechRecognizer = null;
-}
 
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
