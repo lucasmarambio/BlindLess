@@ -289,6 +289,7 @@ public class MainActivity extends Activity{
 					// lang = for which the language data exists, usually "eng"
 					baseApi.init("/storage/sdcard0/", "spa+eng");
 					//baseApi.init("/storage/sdcard0/tessdata/spa.traineddata", "spa");
+					baseApi.init("/storage/sdcard0/TrainData", "spa");
 					// Eg. baseApi.init("/mnt/sdcard/tesseract/tessdata/eng.traineddata", "eng");
 					baseApi.setImage(bitmap);
 					String recognizedText = baseApi.getUTF8Text();

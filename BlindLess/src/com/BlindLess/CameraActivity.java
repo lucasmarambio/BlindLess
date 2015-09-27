@@ -12,16 +12,12 @@ import java.util.Map;
 import android.app.Activity;
 import android.content.Intent;
 import android.hardware.Camera;
-import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.View.OnTouchListener;
 import android.widget.FrameLayout;
 
 
@@ -56,107 +52,55 @@ public class CameraActivity extends Activity {
 	    check.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 	    startActivityForResult(check, TTS_CHECK);
 
-	    FrameLayout preview = initializeServices();
-              
-		preview.setOnTouchListener(new View.OnTouchListener() {
-			
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-				mCamera.takePicture(mShutterCallback, null, mPictureCallback);
-				return false;
-			}			
-
-		});     
+	    initializeServices();
 		
         
     }
 
-
 	private FrameLayout initializeServices() {
-		//Speech Recognition
-		initializeSpeech();
-
         // Create an instance of Camera
 		if (mCamera == null) mCamera = getCameraInstance();
 
         // Create our Preview view and set it as the content of our activity.
-		if (mPreview == null) mPreview = new CameraPreview(this, mCamera);
+		if (mPreview == null) mPreview = new CameraPreview(this, mCamera, onTakePicture);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(mPreview);
+        
+        //Speech Recognition
+  		initializeSpeech();
+        
 		return preview;
 	}
-    
-    
-	@Override
-	protected void onStop() {
-	    super.onStop();  // Always call the superclass method first
-
-	    // Save the note's current draft, because the activity is stopping
-	    // and we want to be sure the current note progress isn't lost.
-	    if(mCamera != null) mCamera.release();
-	    if(mSpeechRecognizer != null) cleanSpeecher();
-	    if(speaker != null) speaker.destroy();
-	}
 	
-	@Override
-	protected void onRestart() {
-	    super.onRestart();  // Always call the superclass method first
-
-//	    initializeServices();
-	    
-	}
-    
-
-	private OnTouchListener touchListener = new OnTouchListener()
-    {
-        @Override
-        public boolean onTouch(View v, MotionEvent event) 
-        {
-           // take a picture
-           mCamera.takePicture(null, null, mPictureCallback);
-           return false;
-        } // end method onTouch
-     }; // end touchListener  
-	
-	public static Camera getCameraInstance(){
-	    Camera c = null; 
-	    try {
-	        c = Camera.open(); // attempt to get a Camera instance
-	    }
-	    catch (Exception e){
-	        // Camera is not available (in use or does not exist)
-	    	Log.e("CameraActivity",e.getMessage().toString());
-	    }
-	    return c; // returns null if camera is unavailable
-	}
-	
-	private PictureCallback mPictureCallback = new PictureCallback() {
+	private CommandCamera onTakePicture = new CommandCamera(){
 
 		@Override
-		public void onPictureTaken(byte[] data, Camera camera) {
-
+		public void runCommand(byte[] data, Camera camera) {
+			
 			File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
 			if (pictureFile == null) {
 				Log.e("TAG",
 						"Error creating media file, check storage permissions: pictureFile== null");
 				return;
 			}
-
+			
 			try {
 				FileOutputStream fos = new FileOutputStream(pictureFile);
 				fos.write(data);
 				fos.close();
 				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
-				mCamera.startPreview();
 			} catch (FileNotFoundException e) {
 				Log.e("TAG", "File not found: " + e.getMessage());
 			} catch (IOException e) {
 				Log.e("TAG", "Error accessing file: " + e.getMessage());
 			}
+			Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
+			
 		}
+
+		
 	};
 	
-	/** Create a File for saving an image or video */
 	private static File getOutputMediaFile(int type) {
 		// To be safe, you should check that the SDCard is mounted
 		// using Environment.getExternalStorageState() before doing this.
@@ -190,6 +134,46 @@ public class CameraActivity extends Activity {
 
 		return mediaFile;
 	}
+    
+	@Override
+	protected void onStop() {
+	    super.onStop();  // Always call the superclass method first
+
+	    //Release camera resources
+	    if(mCamera != null) mCamera.release();
+	    if(mSpeechRecognizer != null) cleanSpeecher();
+	    if(speaker != null) speaker.destroy();
+	}
+	
+	@Override
+	protected void onRestart() {
+	    super.onRestart();  // Always call the superclass method first	    
+	}
+    
+    private void cleanSpeecher() {
+    	if(mSpeechRecognizer !=null){
+	    	mSpeechRecognizer.stopListening();
+	    	mSpeechRecognizer.cancel();
+	    	mSpeechRecognizer.destroy();              
+
+	    }
+	    mSpeechRecognizer = null;
+	}
+	
+	public static Camera getCameraInstance(){
+	    Camera camera = null;
+	    
+	    try {
+	    	camera = Camera.open(); // attempt to get a Camera instance
+	    }
+	    catch (Exception e){
+	        // Camera is not available (in use or does not exist)
+	    	Log.e("CameraActivity",e.getMessage().toString());
+	    }
+	    
+	    return camera; // returns null if camera is unavailable
+	}
+	
 
 	Camera.ShutterCallback mShutterCallback = new Camera.ShutterCallback() {
 		@Override
@@ -289,5 +273,38 @@ public class CameraActivity extends Activity {
          }
      }
    }
+	
+//	@Override
+//	protected void onPause() {
+//	    super.onPause();
+//	    try
+//	    {    
+//	        // release the camera immediately on pause event   
+//	        //releaseCamera();
+//	         mCamera.stopPreview(); 
+//	         mCamera.setPreviewCallback(null);
+//	         mPreview.getHolder().removeCallback(mPreview);
+//	         mCamera.release();
+//	         mCamera = null;
+//
+//	    }
+//	    catch(Exception e)
+//	    {
+//	        e.printStackTrace();
+//	    }
+//	}
+//	
+//	@Override
+//	protected void onResume()
+//	{
+//	    super.onResume();
+//	    try
+//	    {
+//	        mCamera.setPreviewCallback(null);
+//	        initializeServices();
+//	    } catch (Exception e){
+////	        Log.d(TAG, "Error starting camera preview: " + e.getMessage());
+//	    }
+//	}   
 	
 }
