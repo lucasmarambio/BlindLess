@@ -45,6 +45,7 @@ public class MainActivity extends Activity{
     private SpeechRecognizer mSpeechRecognizer;
     private Intent mSpeechRecognizerIntent; 
     private boolean mIslistening; 
+    private SpellCheck checker;
     private Map<String, Command> commandDictionary = new HashMap<String, Command>();
 
     
@@ -299,8 +300,6 @@ public class MainActivity extends Activity{
 					// DATA_PATH = Path to the storage
 					// lang = for which the language data exists, usually "eng"
 					baseApi.init("/storage/sdcard0/", "spa");
-					//baseApi.init("/storage/sdcard0/tessdata/spa.traineddata", "spa");
-					// Eg. baseApi.init("/mnt/sdcard/tesseract/tessdata/eng.traineddata", "eng");
 					baseApi.setImage(bitmap);
 					String recognizedText = baseApi.getUTF8Text();
 					baseApi.end();

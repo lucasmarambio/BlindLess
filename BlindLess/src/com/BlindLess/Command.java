@@ -8,5 +8,5 @@ interface Command {
 }
 
 interface CommandCamera {
-	void runCommand(byte[] data, Camera camera);
+	int runCommand(byte[] data, Camera camera);
 }

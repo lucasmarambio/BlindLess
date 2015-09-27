@@ -9,15 +9,23 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import com.googlecode.tesseract.android.TessBaseAPI;
+
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.Camera;
+import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.FrameLayout;
 
 
@@ -53,6 +61,16 @@ public class CameraActivity extends Activity {
 	    startActivityForResult(check, TTS_CHECK);
 
 	    initializeServices();
+        
+//		preview.setOnTouchListener(new View.OnTouchListener() {
+//			
+//			@Override
+//			public boolean onTouch(View v, MotionEvent event) {
+//				mCamera.takePicture(mShutterCallback, null, mPictureCallback);
+//				return false;
+//			}		
+//
+//		});     
     }
 
 	private FrameLayout initializeServices() {
@@ -73,14 +91,16 @@ public class CameraActivity extends Activity {
 	private CommandCamera onTakePicture = new CommandCamera(){
 
 		@Override
-		public void runCommand(byte[] data, Camera camera) {
+		public int runCommand(byte[] data, Camera camera) {
 			
 			File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
 			if (pictureFile == null) {
 				Log.e("TAG",
 						"Error creating media file, check storage permissions: pictureFile== null");
-				return;
+				return -1;
 			}
+			
+			speaker.speak("Imagen capturada. Aguarde mientras se procesa.");
 			
 			try {
 				FileOutputStream fos = new FileOutputStream(pictureFile);
@@ -94,6 +114,22 @@ public class CameraActivity extends Activity {
 			}
 			Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
 			
+			BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inSampleSize = 1;
+				
+			Bitmap bitmap = BitmapFactory.decodeFile(pictureFile.getPath(), options );
+			
+			bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+			TessBaseAPI baseApi = new TessBaseAPI();
+			// DATA_PATH = Path to the storage
+			// lang = for which the language data exists, usually "eng"
+			baseApi.init("/storage/sdcard0/", "spa");
+			baseApi.setImage(bitmap);
+			String recognizedText = baseApi.getUTF8Text();
+			speaker.speak(recognizedText);
+			
+			speaker.speak("Texto leído.");
+			return 0;
 		}
 
 		
@@ -168,6 +204,15 @@ public class CameraActivity extends Activity {
 	        // Camera is not available (in use or does not exist)
 	    	Log.e("CameraActivity",e.getMessage().toString());
 	    }
+	    
+	  //set camera to continually auto-focus
+	    Camera.Parameters params = camera.getParameters();
+	    if (params.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+	        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+	    } else {
+	        //Choose another supported mode
+	    }
+	    camera.setParameters(params);
 	    
 	    return camera; // returns null if camera is unavailable
 	}
