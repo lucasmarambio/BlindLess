@@ -2,17 +2,25 @@ package com.BlindLess;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 import android.content.Context;
 import android.hardware.Camera;
+import android.hardware.Camera.Size;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
 	
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private CommandCamera onTakePic;
+    private boolean initTouch = true;
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
     
@@ -29,6 +37,19 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mHolder.addCallback(this);
         // deprecated setting, but required on Android versions prior to 3.0
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        
+        this.setOnTouchListener(new View.OnTouchListener() {
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if (initTouch) {
+					mCamera.takePicture(null, null, mPictureCallback);
+					initTouch = false;
+				}
+				return false;
+			}		
+
+		});   
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
@@ -69,7 +90,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         	initPreview(w, h);
             mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
-            mCamera.takePicture(null, mPictureCallback, mPictureCallback);
+//            mCamera.takePicture(null, null, mPictureCallback);
 
         } catch (Exception e){
             Log.d("ERROR", "Error starting camera preview: " + e.getMessage());
@@ -81,7 +102,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
             if (!cameraConfigured) {
                 Camera.Parameters parameters = mCamera.getParameters();
-                Camera.Size size = getBestPreviewSize(width, height, parameters);
+                Camera.Size size = getBestPreviewSize(0, width, height, parameters, 0);
 
                 if (size != null) {
                     parameters.setPreviewSize(size.width, size.height);
@@ -102,26 +123,38 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
     
-    private Camera.Size getBestPreviewSize(int width, int height,
-            Camera.Parameters parameters) {
-        Camera.Size result = null;
+    private Camera.Size getBestPreviewSize(int displayOrientation,
+            int width,
+            int height,
+            Camera.Parameters parameters,
+            double closeEnough) {
+    	double targetRatio=(double)width / height;
+        Camera.Size optimalSize=null;
+        double minDiff=Double.MAX_VALUE;
 
-        for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
-            if (size.width <= width && size.height <= height) {
-                if (result == null) {
-                    result = size;
-                } else {
-                    int resultArea = result.width * result.height;
-                    int newArea = size.width * size.height;
-
-                    if (newArea > resultArea) {
-                        result = size;
-                    }
-                }
-            }
+        if (displayOrientation == 90 || displayOrientation == 270) {
+          targetRatio=(double)height / width;
         }
 
-        return (result);
+        List<Size> sizes=parameters.getSupportedPreviewSizes();
+
+        Collections.sort(sizes,
+                         Collections.reverseOrder(new SizeComparator()));
+
+        for (Size size : sizes) {
+          double ratio=(double)size.width / size.height;
+
+          if (Math.abs(ratio - targetRatio) < minDiff) {
+            optimalSize=size;
+            minDiff=Math.abs(ratio - targetRatio);
+          }
+
+          if (minDiff < closeEnough) {
+            break;
+          }
+        }
+
+        return(optimalSize);	
     }
     
 	/** Create a File for saving an image or video */
@@ -149,5 +182,23 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     		}      
         }
     };
+    
+    private static class SizeComparator implements
+    Comparator<Camera.Size> {
+	  @Override
+	  public int compare(Size lhs, Size rhs) {
+	    int left=lhs.width * lhs.height;
+	    int right=rhs.width * rhs.height;
+	
+	    if (left < right) {
+	      return(-1);
+	    }
+	    else if (left > right) {
+	      return(1);
+	    }
+	
+	    return(0);
+	  }
+}
    
 }
