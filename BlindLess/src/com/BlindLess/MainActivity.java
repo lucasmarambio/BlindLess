@@ -157,7 +157,7 @@ public class MainActivity extends Activity{
 	//Leaving Activity methods
     private void iniciarActividadCamara() {
 		speaker.speak("Iniciando cámara");
-		Intent intent = new Intent(getApplicationContext(), CameraActivityOpenCV.class );
+		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
 		startActivityForResult(intent, CAMERA_ACTIVITY);
 	}
     

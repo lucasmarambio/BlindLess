@@ -53,8 +53,6 @@ public class CameraActivity extends Activity {
 	    startActivityForResult(check, TTS_CHECK);
 
 	    initializeServices();
-		
-        
     }
 
 	private FrameLayout initializeServices() {
@@ -182,16 +180,6 @@ public class CameraActivity extends Activity {
 			Log.i("CameraActivity","onShutter");
 		}
 	};
-	
-    private void cleanSpeecher() {
-   	if(mSpeechRecognizer !=null){
-    mSpeechRecognizer.stopListening();
-    mSpeechRecognizer.cancel();
-    mSpeechRecognizer.destroy();              
-
-   }
-   mSpeechRecognizer = null;
-}
 
 	
 	//Speech Recognition necessary methods
