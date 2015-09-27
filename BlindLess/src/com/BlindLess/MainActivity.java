@@ -9,6 +9,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
+
 import com.BlindLess.R;
 import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
 
@@ -55,6 +59,10 @@ public class MainActivity extends Activity{
 			buttonCamera = (Button)findViewById(R.id.buttonCamera);
 			buttonBillete = (Button)findViewById(R.id.buttonBillete);
 			buttonComparador = (Button)findViewById(R.id.ButtonComparador);
+			
+			 if (!OpenCVLoader.initDebug()) {
+			        // Handle initialization error
+			    }
 			
 			//Init command dictionary
 			initDictionary();
