@@ -9,5 +9,6 @@
     <string name="escuchando">Escuchando a Genny.</string>
     <string name="iniciarCamara">Iniciar Camara</string>
     <string name="detectarBillete">Detectar Billete</string>
+    <string name="compararImagenes">Comparar Imagenes</string>
 
 </resources>

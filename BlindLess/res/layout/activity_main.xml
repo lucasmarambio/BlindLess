@@ -32,4 +32,13 @@
         android:layout_below="@+id/buttonCamera"
         android:text="@string/detectarBillete" />
 
+    <Button
+        android:id="@+id/ButtonComparador"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/buttonBillete"
+        android:layout_alignRight="@+id/buttonBillete"
+        android:layout_below="@+id/buttonBillete"
+        android:text="@string/compararImagenes" />
+
 </RelativeLayout>
