@@ -10,9 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.BlindLess.R;
-//import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
-
-import com.googlecode.tesseract.android.TessBaseAPI;
+import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
 
 import android.app.Activity;
 import android.content.Intent;
@@ -32,6 +30,7 @@ public class MainActivity extends Activity{
 	private Button button;
 	private Button buttonCamera;
 	private Button buttonBillete;
+	private Button buttonComparador;
 	
 	//text-to-speech fields
     public Speaker speaker; 
@@ -55,6 +54,7 @@ public class MainActivity extends Activity{
 			button = (Button)findViewById(R.id.button1);
 			buttonCamera = (Button)findViewById(R.id.buttonCamera);
 			buttonBillete = (Button)findViewById(R.id.buttonBillete);
+			buttonComparador = (Button)findViewById(R.id.ButtonComparador);
 			
 			//Init command dictionary
 			initDictionary();
@@ -68,6 +68,7 @@ public class MainActivity extends Activity{
 			//[INICIO].
 			buttonBillete.setOnClickListener( new ButtonClickHandler() );
 //			[FIN].
+			buttonComparador.setOnClickListener( new ButtonClickHandler() );
 			
 			initializeSpeech();
 		    
@@ -244,7 +245,7 @@ public class MainActivity extends Activity{
 				break;
 //[INICIO] Comenzando con las pruebas para detectar texto.
 			case R.id.buttonBillete:
-				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/BlindLess1.jpg";
+				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/rodri_prueba.jpg";
 				ExifInterface exif;
 				try {
 					exif = new ExifInterface(path_ocr);
@@ -291,7 +292,6 @@ public class MainActivity extends Activity{
 					// lang = for which the language data exists, usually "eng"
 					baseApi.init("/storage/sdcard0/", "spa");
 					//baseApi.init("/storage/sdcard0/tessdata/spa.traineddata", "spa");
-//					baseApi.init("/storage/sdcard0/TrainData", "spa");
 					// Eg. baseApi.init("/mnt/sdcard/tesseract/tessdata/eng.traineddata", "eng");
 					baseApi.setImage(bitmap);
 					String recognizedText = baseApi.getUTF8Text();
@@ -301,7 +301,18 @@ public class MainActivity extends Activity{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-												
+				break;	
+			
+			case R.id.ButtonComparador:
+
+				
+				ImageComparator imageComparator = new ImageComparator();
+				String patron_billete_2 =  "/storage/sdcard0/Patrones Billetes/rombos_2_pesos.jpg";
+				String billete_2 = "/storage/sdcard0/Patrones Billetes/2_pesos_billete.jpg";
+				String outfile = null;
+				int match_method = 0;
+				imageComparator.comparate(billete_2, patron_billete_2, outfile, match_method);
+				
 //[FIN] Comenzando con las pruebas para detectar texto.
 			default:
 				break;
