@@ -10,7 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.BlindLess.R;
-import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
+//import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
+
+import com.googlecode.tesseract.android.TessBaseAPI;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -242,7 +244,7 @@ public class MainActivity extends Activity{
 				break;
 //[INICIO] Comenzando con las pruebas para detectar texto.
 			case R.id.buttonBillete:
-				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/arial14.jpg";
+				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/BlindLess1.jpg";
 				ExifInterface exif;
 				try {
 					exif = new ExifInterface(path_ocr);
@@ -267,7 +269,7 @@ public class MainActivity extends Activity{
 					}
 					
 					BitmapFactory.Options options = new BitmapFactory.Options();
-				    options.inSampleSize = 4;
+				    options.inSampleSize = 1;
 				    	
 				    Bitmap bitmap = BitmapFactory.decodeFile( path_ocr, options );
 				    //_image.setImageBitmap(bitmap);
@@ -287,9 +289,9 @@ public class MainActivity extends Activity{
 					TessBaseAPI baseApi = new TessBaseAPI();
 					// DATA_PATH = Path to the storage
 					// lang = for which the language data exists, usually "eng"
-					baseApi.init("/storage/sdcard0/", "spa+eng");
+					baseApi.init("/storage/sdcard0/", "spa");
 					//baseApi.init("/storage/sdcard0/tessdata/spa.traineddata", "spa");
-					baseApi.init("/storage/sdcard0/TrainData", "spa");
+//					baseApi.init("/storage/sdcard0/TrainData", "spa");
 					// Eg. baseApi.init("/mnt/sdcard/tesseract/tessdata/eng.traineddata", "eng");
 					baseApi.setImage(bitmap);
 					String recognizedText = baseApi.getUTF8Text();
