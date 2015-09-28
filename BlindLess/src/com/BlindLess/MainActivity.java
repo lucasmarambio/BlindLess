@@ -40,7 +40,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 //RR 2015-09-27 [FIN].
 
@@ -327,8 +327,8 @@ public class MainActivity extends Activity{
 
 			case R.id.ButtonComparador:
 				
-//				String inFile = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_pesos_billete.jpg";
-				String inFile = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/Billete_belgrano_10_pesos.JPG";
+				String inFile = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_pesos_billete.jpg";
+//				String inFile = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/Billete_belgrano_10_pesos.JPG";
 				String templateFile =  "storage/sdcard0/PatronesBilletes/Billete 2 pesos/rombos_2_pesos.jpg";
 				String outFile = "storage/sdcard0/PatronesBilletes/Resultado.jpg";
 
@@ -339,8 +339,8 @@ public class MainActivity extends Activity{
 //			    File templateFile = new File("/storage/sdcard0/Patrones Billetes/rombos_2_pesos.jpg");
 			    
 			    
-				 	Mat img = Highgui.imread(inFile);
-			        Mat templ = Highgui.imread(templateFile);
+				 	Mat img = Imgcodecs.imread(inFile);
+			        Mat templ = Imgcodecs.imread(templateFile);
 
 			        // / Create the result matrix
 			        int result_cols = img.cols() - templ.cols() + 1;
@@ -362,11 +362,11 @@ public class MainActivity extends Activity{
 			        }
 
 			        // / Show me what you got
-			        Core.rectangle(img, matchLoc, new Point(matchLoc.x + templ.cols(),
+			        Imgproc.rectangle(img, matchLoc, new Point(matchLoc.x + templ.cols(),
 			                matchLoc.y + templ.rows()), new Scalar(0, 255, 0));
 
 			        // Save the visualized detection.
-			        Highgui.imwrite(outFile, img);
+			        Imgcodecs.imwrite(outFile, img);
 			        //System.out.println("Writing "+ outFile);
 			        
 				
