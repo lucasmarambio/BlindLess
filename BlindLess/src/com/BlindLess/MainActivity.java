@@ -45,7 +45,6 @@ public class MainActivity extends Activity{
     private SpeechRecognizer mSpeechRecognizer;
     private Intent mSpeechRecognizerIntent; 
     private boolean mIslistening; 
-    private SpellCheck checker;
     private Map<String, Command> commandDictionary = new HashMap<String, Command>();
 
     
