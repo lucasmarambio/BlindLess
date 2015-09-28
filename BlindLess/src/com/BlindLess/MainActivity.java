@@ -5,6 +5,7 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +18,7 @@ import com.BlindLess.R;
 import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -25,9 +27,22 @@ import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.media.ExifInterface;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+
+import org.opencv.android.OpenCVLoader;
+// RR 2015-09-27 [INICIO].
+import org.opencv.core.Core;
+import org.opencv.core.Core.MinMaxLocResult;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.highgui.Highgui;
+import org.opencv.imgproc.Imgproc;
+//RR 2015-09-27 [FIN].
 
 public class MainActivity extends Activity{
 
@@ -60,9 +75,9 @@ public class MainActivity extends Activity{
 			buttonBillete = (Button)findViewById(R.id.buttonBillete);
 			buttonComparador = (Button)findViewById(R.id.ButtonComparador);
 			
-			 if (!OpenCVLoader.initDebug()) {
-			        // Handle initialization error
-			    }
+			if (!OpenCVLoader.initDebug()) {
+		        // Handle initialization error
+		    }
 			
 			//Init command dictionary
 			initDictionary();
@@ -308,18 +323,54 @@ public class MainActivity extends Activity{
 					e.printStackTrace();
 				}
 				break;	
-			
-			case R.id.ButtonComparador:
+//[FIN] Comenzando con las pruebas para detectar texto.			
 
+			case R.id.ButtonComparador:
 				
-				ImageComparator imageComparator = new ImageComparator();
-				String patron_billete_2 =  "/storage/sdcard0/Patrones Billetes/rombos_2_pesos.jpg";
-				String billete_2 = "/storage/sdcard0/Patrones Billetes/2_pesos_billete.jpg";
-				String outfile = null;
-				int match_method = 0;
-				imageComparator.comparate(billete_2, patron_billete_2, outfile, match_method);
+//				String inFile = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_pesos_billete.jpg";
+				String inFile = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/Billete_belgrano_10_pesos.JPG";
+				String templateFile =  "storage/sdcard0/PatronesBilletes/Billete 2 pesos/rombos_2_pesos.jpg";
+				String outFile = "storage/sdcard0/PatronesBilletes/Resultado.jpg";
+
+				int match_method = Imgproc.TM_CCOEFF_NORMED;
 				
-//[FIN] Comenzando con las pruebas para detectar texto.
+//				File root = Environment.getExternalStorageDirectory();//"/storage/sdcard0/Patrones Billetes";
+//			    File inFile = new File("/storage/sdcard0/Patrones Billetes/2_pesos_billete.jpg");
+//			    File templateFile = new File("/storage/sdcard0/Patrones Billetes/rombos_2_pesos.jpg");
+			    
+			    
+				 	Mat img = Highgui.imread(inFile);
+			        Mat templ = Highgui.imread(templateFile);
+
+			        // / Create the result matrix
+			        int result_cols = img.cols() - templ.cols() + 1;
+			        int result_rows = img.rows() - templ.rows() + 1;
+			        Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
+
+			        // / Do the Matching and Normalize
+			        Imgproc.matchTemplate(img, templ, result, match_method);
+			        Core.normalize(result, result, 0, 1, Core.NORM_MINMAX, -1, new Mat());
+
+			        // / Localizing the best match with minMaxLoc
+			        MinMaxLocResult mmr = Core.minMaxLoc(result);
+
+			        Point matchLoc;
+			        if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
+			            matchLoc = mmr.minLoc;
+			        } else {
+			            matchLoc = mmr.maxLoc;
+			        }
+
+			        // / Show me what you got
+			        Core.rectangle(img, matchLoc, new Point(matchLoc.x + templ.cols(),
+			                matchLoc.y + templ.rows()), new Scalar(0, 255, 0));
+
+			        // Save the visualized detection.
+			        Highgui.imwrite(outFile, img);
+			        //System.out.println("Writing "+ outFile);
+			        
+				
+
 			default:
 				break;
 			}
