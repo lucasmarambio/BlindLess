@@ -327,50 +327,15 @@ public class MainActivity extends Activity{
 
 			case R.id.ButtonComparador:
 				
-				String inFile = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_pesos_billete.jpg";
-//				String inFile = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/Billete_belgrano_10_pesos.JPG";
-				String templateFile =  "storage/sdcard0/PatronesBilletes/Billete 2 pesos/rombos_2_pesos.jpg";
+				String billete_2_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_pesos_billete.jpg";
+				String billete_10_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/Billete_belgrano_10_pesos.JPG";
+				String patron_billete_2 =  "storage/sdcard0/PatronesBilletes/Billete 2 pesos/rombos_2_pesos.jpg";
 				String outFile = "storage/sdcard0/PatronesBilletes/Resultado.jpg";
-
 				int match_method = Imgproc.TM_CCOEFF_NORMED;
-				
-//				File root = Environment.getExternalStorageDirectory();//"/storage/sdcard0/Patrones Billetes";
-//			    File inFile = new File("/storage/sdcard0/Patrones Billetes/2_pesos_billete.jpg");
-//			    File templateFile = new File("/storage/sdcard0/Patrones Billetes/rombos_2_pesos.jpg");
-			    
-			    
-				 	Mat img = Imgcodecs.imread(inFile);
-			        Mat templ = Imgcodecs.imread(templateFile);
-
-			        // / Create the result matrix
-			        int result_cols = img.cols() - templ.cols() + 1;
-			        int result_rows = img.rows() - templ.rows() + 1;
-			        Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
-
-			        // / Do the Matching and Normalize
-			        Imgproc.matchTemplate(img, templ, result, match_method);
-			        Core.normalize(result, result, 0, 1, Core.NORM_MINMAX, -1, new Mat());
-
-			        // / Localizing the best match with minMaxLoc
-			        MinMaxLocResult mmr = Core.minMaxLoc(result);
-
-			        Point matchLoc;
-			        if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
-			            matchLoc = mmr.minLoc;
-			        } else {
-			            matchLoc = mmr.maxLoc;
-			        }
-
-			        // / Show me what you got
-			        Imgproc.rectangle(img, matchLoc, new Point(matchLoc.x + templ.cols(),
-			                matchLoc.y + templ.rows()), new Scalar(0, 255, 0));
-
-			        // Save the visualized detection.
-			        Imgcodecs.imwrite(outFile, img);
-			        //System.out.println("Writing "+ outFile);
-			        
-				
-
+				ImageComparator comparator = new ImageComparator();
+				comparator.comparate(billete_2_pesos, patron_billete_2, outFile, match_method);
+				break;
+			   
 			default:
 				break;
 			}
