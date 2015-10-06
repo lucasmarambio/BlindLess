@@ -10,5 +10,6 @@
     <string name="iniciarCamara">Iniciar Camara</string>
     <string name="detectarBillete">Detectar Billete</string>
     <string name="compararImagenes">Comparar Imagenes</string>
+    <string name="blindlessLogo">BlindLess Logo</string>
 
 </resources>
