@@ -5,48 +5,30 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
-
 import com.BlindLess.R;
 import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.hardware.Camera;
-import android.hardware.Camera.PictureCallback;
 import android.media.ExifInterface;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-import org.opencv.android.OpenCVLoader;
-// RR 2015-09-27 [INICIO].
-import org.opencv.core.Core;
-import org.opencv.core.Core.MinMaxLocResult;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 //RR 2015-09-27 [FIN].
 
 public class MainActivity extends Activity{
 
-	private Button button;
 	private Button buttonCamera;
 	private Button buttonBillete;
 	private Button buttonComparador;
@@ -70,7 +52,6 @@ public class MainActivity extends Activity{
 			super.onCreate(savedInstanceState);
 			setContentView(R.layout.activity_main);
 	
-			button = (Button)findViewById(R.id.button1);
 			buttonCamera = (Button)findViewById(R.id.buttonCamera);
 			buttonBillete = (Button)findViewById(R.id.buttonBillete);
 			buttonComparador = (Button)findViewById(R.id.ButtonComparador);
@@ -99,23 +80,7 @@ public class MainActivity extends Activity{
 		} catch (Exception e) {
 			// TODO: hacer algo
 		}	
-		button.setOnClickListener(new View.OnClickListener() 
-		{	
-			@Override
-			public void onClick(View v) 
-			{
-				if (button.getText() == getString(R.string.reconocerVoz))
-				{
-					button.setText(getString(R.string.escuchando));
-					speaker.speak(getString(R.string.escuchando));
-				}
-				else
-				{
-					button.setText(getString(R.string.reconocerVoz));
-					speaker.speak(getString(R.string.reconocerVoz));
-				}
-			}
-		});	
+		
 	}
 	
 //	@Override

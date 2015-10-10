@@ -1,44 +1,39 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
+    android:baselineAligned="false"
+    android:gravity="bottom"
+    android:orientation="vertical"
     tools:context="com.Blindless.MainActivity" >
 
-    <Button
-        android:id="@+id/button1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="19dp"
-        android:text="@string/reconocerVoz" />
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:contentDescription="@string/blindlessLogo"
+        android:src="@drawable/blindless" />
 
     <Button
         android:id="@+id/buttonCamera"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/button1"
-        android:layout_alignRight="@+id/button1"
-        android:layout_below="@+id/button1"
+        android:layout_marginTop="19dp"
         android:text="@string/iniciarCamara" />
 
     <Button
-        android:id="@+id/buttonBillete"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/buttonCamera"
-        android:layout_alignRight="@+id/buttonCamera"
-        android:layout_below="@+id/buttonCamera"
-        android:text="@string/detectarBillete" />
-
-    <Button
         android:id="@+id/ButtonComparador"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/buttonBillete"
-        android:layout_alignRight="@+id/buttonBillete"
-        android:layout_below="@+id/buttonBillete"
         android:text="@string/compararImagenes" />
 
-</RelativeLayout>
+    <Button
+        android:id="@+id/buttonBillete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/detectarBillete" />
+
+</LinearLayout>

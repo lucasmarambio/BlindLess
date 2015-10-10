@@ -8,12 +8,16 @@ import java.util.List;
 
 import android.content.Context;
 import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
 import android.hardware.Camera.Size;
 import android.util.Log;
+import android.view.Display;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.WindowManager;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
 	
@@ -74,6 +78,33 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
           // preview surface does not exist
           return;
         }
+        
+        Parameters parameters = mCamera.getParameters();
+        Display display = ((WindowManager)getContext().getSystemService(getContext().WINDOW_SERVICE)).getDefaultDisplay();
+
+        if(display.getRotation() == Surface.ROTATION_0)
+        {
+            parameters.setPreviewSize(h, w);                           
+            mCamera.setDisplayOrientation(90);
+        }
+
+        if(display.getRotation() == Surface.ROTATION_90)
+        {
+            parameters.setPreviewSize(w, h);                           
+        }
+
+        if(display.getRotation() == Surface.ROTATION_180)
+        {
+            parameters.setPreviewSize(h, w);               
+        }
+
+        if(display.getRotation() == Surface.ROTATION_270)
+        {
+            parameters.setPreviewSize(w, h);
+            mCamera.setDisplayOrientation(180);
+        }
+
+        mCamera.setParameters(parameters);
 
         // stop preview before making changes
         try {
