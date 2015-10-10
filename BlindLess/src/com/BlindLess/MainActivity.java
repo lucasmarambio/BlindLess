@@ -327,9 +327,11 @@ public class MainActivity extends Activity{
 
 			case R.id.ButtonComparador:
 				
-				String billete_2_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_pesos_billete.jpg";
+				String billete_2_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_billete_posta.jpg";
 				String billete_10_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/Billete_belgrano_10_pesos.JPG";
-				String patron_billete_2 =  "storage/sdcard0/PatronesBilletes/Billete 2 pesos/rombos_2_pesos.jpg";
+				String patron_billete_2 =  "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_patron_rombos.JPG";
+				String patron_billete_2_abajo = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_inferior_der.JPG";
+				String patron_billete_2_escrito = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/texto_2_pesos.JPG";
 				String outFile = "storage/sdcard0/PatronesBilletes/Resultado.jpg";
 				int match_method = Imgproc.TM_CCOEFF_NORMED;
 				ImageComparator comparator = new ImageComparator();
