@@ -292,8 +292,12 @@ public class MainActivity extends Activity{
 
 			case R.id.ButtonComparador:
 				
-				String billete_2_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_billete_posta.jpg";
-				String billete_10_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/Billete_belgrano_10_pesos.JPG";
+				String naipe = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/naipe.jpg";
+				String cartel = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/cartel.jpg";
+				String billete_2_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_pesos_billete.jpg";
+				String billete_10_pesos = "storage/sdcard0/PatronesBilletes/Billete 10 pesos/10_pesos_billete.jpg";
+				String billete_10_pesos_2 = "storage/sdcard0/PatronesBilletes/Billete 10 pesos/10_pesos_billete2.jpg";
+				String billete_50_pesos = "storage/sdcard0/PatronesBilletes/Billete 50 pesos/50_pesos_billete.jpg";
 				String patron_billete_2 =  "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_patron_rombos.JPG";
 				String patron_billete_2_abajo = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_inferior_der.JPG";
 				String patron_billete_2_escrito = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/texto_2_pesos.JPG";
