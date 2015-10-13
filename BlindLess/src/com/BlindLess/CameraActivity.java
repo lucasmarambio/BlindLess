@@ -5,9 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
 
@@ -35,6 +39,8 @@ public class CameraActivity extends Activity {
 	//text-to-speech fields
     public Speaker speaker; 
     private static final int TTS_CHECK = 10;
+    private final int DECIR_MSJ_PRINCIPAL = 10000;
+    private final int REPETIR_MSJ_PRINCIPAL = 10000;
     
     //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
@@ -42,11 +48,17 @@ public class CameraActivity extends Activity {
     private boolean mIslistening;  
     private Map<String, Command> commandDictionary = new HashMap<String, Command>();
     
+    //Timer
+    private Timer timer;
+    private TimerTask task;
+	private android.os.Handler handler;
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         
     	super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+        handler = new android.os.Handler();
         
 		//Init command dictionary
 		initDictionary();
@@ -177,6 +189,7 @@ public class CameraActivity extends Activity {
 	    if(mCamera != null) mCamera.release();
 	    if(mSpeechRecognizer != null) cleanSpeecher();
 	    if(speaker != null) speaker.destroy();
+	    cleanTimer();
 	}
 	
 	@Override
@@ -252,27 +265,35 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put("ayuda", new Command() {
             public void runCommand() { 
-            	if(speaker != null) 
-            	speaker.speak("Dijiste ayuda");
-            	speaker.speak("Sujetar firmemente el celular");
-            	speaker.speak("Alinear y centrar con el objeto a escanear");
-            	speaker.speak("Distanciar el celular del objeto entre 27 y 32 centímetros");
-            	speaker.speak("Aguardar la señal de reconocimiento efectivo"); 
+            	List<String> textos = new ArrayList<String>();
+            	textos.add("Dijiste ayuda");
+            	textos.add("Sujetar firmemente el celular");
+            	textos.add("Alinear y centrar con el objeto a escanear");
+            	textos.add("Distanciar el celular del objeto entre 27 y 32 centímetros");
+            	textos.add("Aguardar la señal de reconocimiento efectivo"); 
+            	multipleSpeak(textos);
             	startRecognition();
             	};
         });
 		
 		commandDictionary.put("volver", new Command() {
             public void runCommand() { 
-            	if(speaker != null) speaker.speak("Dijiste volver"); 
+            	speak("Dijiste volver"); 
             	setResult(Activity.RESULT_OK);
             	finish();
             	};
         });
 		
+		commandDictionary.put("repetir", new Command() {
+            public void runCommand() { 
+            	speak("Dijiste repetir");
+            	startRecognition();
+            	};
+        });
+		
 		commandDictionary.put("salir", new Command() {
             public void runCommand() { 
-            	if(speaker != null) speaker.speak("Dijiste salir"); 
+            	speak("Dijiste salir"); 
             	setResult(Activity.RESULT_CANCELED);
             	finish();
             	};
@@ -280,10 +301,24 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put("nada", new Command() {
             public void runCommand() { 
-            	if(speaker != null) speaker.speak("Comando de voz no reconocido"); 
-            	startRecognition(); 
+            		speak("Comando de voz no reconocido");
+            		startRecognition();
             	};
         });
+	}
+	
+	public void multipleSpeak(List<String> textos){
+		cleanTimer();
+		for (String texto : textos) {
+			if(speaker != null) speaker.speak(texto);
+		}
+		repetirMensajePrincipal(DECIR_MSJ_PRINCIPAL, REPETIR_MSJ_PRINCIPAL);
+	}
+	
+	public void speak(String text){
+		cleanTimer();
+		if(speaker != null) speaker.speak(text);
+		repetirMensajePrincipal(DECIR_MSJ_PRINCIPAL, REPETIR_MSJ_PRINCIPAL);
 	}
 	
 	public void startRecognition(){
@@ -295,7 +330,39 @@ public class CameraActivity extends Activity {
 		}
 	}
 
+    public void mensajePrincipal(){
+		speak("Pronuncie el comando ayuda para iniciar la guía de"
+			+ "detección o el comando volver para retornar al Menú principal");
+    }
 	
+    //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.
+    public void repetirMensajePrincipal(int seg1, int seg2) {
+    	cleanTimer();
+    	task = new TimerTask() {
+  		   	@Override
+  		   	public void run() {
+  		   		handler.post(new Runnable() {
+  		   			public void run() {
+  		   				cleanSpeecher();
+  		   				mensajePrincipal();
+  		   				initializeSpeech();
+  		   				startRecognition();
+  		   			};
+  		   		});
+  		   	}
+  		};
+		timer = new Timer();
+		timer.schedule(task,seg1,seg2);
+    }
+
+	private void cleanTimer() {
+		if (timer != null) {
+    		timer.cancel();
+    		timer.purge();
+    	}
+	}
+
+    
 	//Text-to-Speech necessary method to initialize for each activity.
 	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -307,7 +374,10 @@ public class CameraActivity extends Activity {
     	 if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
     		speaker = new Speaker(this, "");
  		    speaker.runOnInit = new Command() {
-	            public void runCommand() { startRecognition(); };
+	            public void runCommand() { 
+	            	mensajePrincipal();
+	        		startRecognition();
+	            };
 	        };
          }else {
              Intent install = new Intent();

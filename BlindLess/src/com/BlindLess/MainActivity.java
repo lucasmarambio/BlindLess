@@ -187,7 +187,6 @@ public class MainActivity extends Activity{
             public void runCommand() { 
             	if(speaker != null) speaker.speak("Dijiste detectar texto"); 
             	iniciarActividadCamara(); 
-//            	startRecognition(); 
             	};
         });
 		commandDictionary.put("detectar billete", new Command() {
