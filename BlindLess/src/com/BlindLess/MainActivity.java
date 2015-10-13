@@ -1,6 +1,5 @@
 package com.BlindLess;
 
-
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
@@ -8,6 +7,9 @@ import android.speech.tts.TextToSpeech;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.Handler;
 
 import org.opencv.android.OpenCVLoader;
 import com.BlindLess.R;
@@ -25,7 +27,6 @@ import android.view.View;
 import android.widget.Button;
 
 import org.opencv.imgproc.Imgproc;
-//RR 2015-09-27 [FIN].
 
 public class MainActivity extends Activity{
 
@@ -43,7 +44,11 @@ public class MainActivity extends Activity{
     private Intent mSpeechRecognizerIntent; 
     private boolean mIslistening; 
     private Map<String, Command> commandDictionary = new HashMap<String, Command>();
-
+    
+    //Timer
+    private Timer timer;
+    private TimerTask task;
+	private android.os.Handler handler;
     
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +60,7 @@ public class MainActivity extends Activity{
 			buttonCamera = (Button)findViewById(R.id.buttonCamera);
 			buttonBillete = (Button)findViewById(R.id.buttonBillete);
 			buttonComparador = (Button)findViewById(R.id.ButtonComparador);
+			handler = new android.os.Handler();
 			
 			if (!OpenCVLoader.initDebug()) {
 		        // Handle initialization error
@@ -69,9 +75,7 @@ public class MainActivity extends Activity{
 		    startActivityForResult(check, TTS_CHECK);
 			
 			buttonCamera.setOnClickListener( new ButtonClickHandler() );
-			//[INICIO].
 			buttonBillete.setOnClickListener( new ButtonClickHandler() );
-//			[FIN].
 			buttonComparador.setOnClickListener( new ButtonClickHandler() );
 			
 			initializeSpeech();
@@ -101,8 +105,10 @@ public class MainActivity extends Activity{
 
 	    // Save the note's current draft, because the activity is stopping
 	    // and we want to be sure the current note progress isn't lost.
-	    if(mSpeechRecognizer != null) cleanSpeecher();
-	    if(speaker != null) speaker.destroy();
+	    if (mSpeechRecognizer != null) cleanSpeecher();
+	    if (speaker != null) speaker.destroy();
+	    if (timer != null) timer.cancel();
+	    if (timer != null) timer.purge();
 	    Log.i("MainActivity","onStopLeaving()");
 	}
 	
@@ -113,11 +119,14 @@ public class MainActivity extends Activity{
 	    
 	    // The activity is either being restarted or started for the first time
 	    // so this is where we should make sure that GPS is enabled
-	    speaker = new Speaker(this, "");
-	    speaker.runOnInit = new Command() {
-            public void runCommand() { startRecognition(); };
-        };
-    
+	    if (speaker == null || speaker.initFinish){ 
+	    	speaker = new Speaker(this, "");
+		    speaker.runOnInit = new Command() {
+		    	public void runCommand() { 
+		    		repetirMensajePrincipal(0,40000);
+ 		    	};
+	        };
+	    }
 	    initializeSpeech();
 	    Log.i("MainActivity","onRestartLeaving");
 	}
@@ -127,7 +136,6 @@ public class MainActivity extends Activity{
 	    	mSpeechRecognizer.stopListening();
 	    	mSpeechRecognizer.cancel();
 	    	mSpeechRecognizer.destroy();              
-
 	    }
 	    mSpeechRecognizer = null;
 	}
@@ -141,6 +149,8 @@ public class MainActivity extends Activity{
 	    // so this is where we should make sure that GPS is enabled
 	    if (speaker != null) speaker.destroy();
 	    if (mSpeechRecognizer != null) cleanSpeecher();
+	    if (timer != null) timer.cancel();
+	    if (timer != null) timer.purge();
 	    Log.i("MainActivity","onDestroyLeaving");
 	}
 
@@ -151,7 +161,6 @@ public class MainActivity extends Activity{
 		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
 		startActivityForResult(intent, CAMERA_ACTIVITY);
 	}
-    
 
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
@@ -162,31 +171,24 @@ public class MainActivity extends Activity{
 
 
 		SpeechRecognitionListener listener = 
-				new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
-										public void runCommand() { 
-											if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
-											initializeSpeech();
-											startRecognition();
-										};
-        });
+			new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
+											public void runCommand() { 
+												if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
+												initializeSpeech();
+												startRecognition();
+											};
+										 });
 		mSpeechRecognizer.setRecognitionListener(listener);
 	}
 	
-	
 	private void initDictionary() {
 		
-		commandDictionary.put("camara", new Command() {
+		commandDictionary.put("detectar texto", new Command() {
             public void runCommand() { 
-            	if(speaker != null) speaker.speak("Dijiste cámara"); 
+            	if(speaker != null) speaker.speak("Dijiste detectar texto"); 
             	iniciarActividadCamara(); 
-            	startRecognition(); 
+//            	startRecognition(); 
             	};
-        });
-		commandDictionary.put("iniciar", new Command() {
-            public void runCommand() { 
-            	if(speaker != null) speaker.speak("Dijiste Iniciar"); 
-            	startRecognition(); 
-        	};
         });
 		commandDictionary.put("detectar billete", new Command() {
             public void runCommand() { 
@@ -194,11 +196,11 @@ public class MainActivity extends Activity{
             	startRecognition(); 
         	};
         });
-		commandDictionary.put("nada", new Command() {
-            public void runCommand() { 
-            	if(speaker != null) speaker.speak("Comando de voz no reconocido"); 
-            	startRecognition(); 
-        	};
+		commandDictionary.put("repetir", new Command() {
+			public void runCommand() { 
+				if(speaker != null) speaker.speak("Dijiste repetir"); 
+				repetirMensajePrincipal(0,40000);
+	    	};
         });
 		commandDictionary.put("salir", new Command() {
             public void runCommand() { 
@@ -206,8 +208,14 @@ public class MainActivity extends Activity{
             	finish(); 
         	};
         });
+		commandDictionary.put("nada", new Command() {
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Comando de voz no reconocido"); 
+            	startRecognition();
+            	repetirMensajePrincipal(20000,40000);
+        	};
+        });
 	}
-
 
 	public void startRecognition(){
 		Log.i("Speech", "StartRecognition call");
@@ -314,19 +322,51 @@ public class MainActivity extends Activity{
 
     }
     
+    public void mensajePrincipal(){
+    	speaker.speak("mensaje principal");
+    	//		speaker.speak("Pronuncie el comando detectar texto"
+//		  	  	  	+ "si desea ingresar al módulo de detección de textos");
+//		speaker.speak("Pronuncie el comando detectar billete"
+//			  		+ "si desea ingresar al módulo de reconocimiento de billetes");
+//		speaker.speak("Pronuncie el comando salir si desea salir de la aplicación");
+		startRecognition();
+    }
+    
+  //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.
+    public void repetirMensajePrincipal(int seg1, int seg2) {
+    	if (timer != null) {
+    		timer.cancel();
+    		timer.purge();
+    	}
+    	task = new TimerTask() {
+  		   	@Override
+  		   	public void run() {
+  		   		handler.post(new Runnable() {
+  		   			public void run() {
+  		   				mensajePrincipal();
+  		   			};
+  		   		});
+  		   	}
+  		};
+		timer = new Timer();
+		timer.schedule(task,seg1,seg2);
+    }
+    
 	//Text-to-Speech necessary method to initialize for each activity.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
      super.onActivityResult(requestCode, resultCode, data);
-
+     
      switch (requestCode) {
      case TTS_CHECK:{
 	    	 Log.i("Main Activity", "TTS_Check");
 	    	 if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
-	             speaker = new Speaker(this, "Bienvenidos a BlindLess");
-	 		    speaker.runOnInit = new Command() {
-		            public void runCommand() { startRecognition(); };
-		        };
+	            speaker = new Speaker(this, "Bienvenidos a BlindLess");
+	            speaker.runOnInit = new Command() {
+		 		    	public void runCommand() { 
+		 		    		repetirMensajePrincipal(0,40000);
+		 		    	};
+	            };
 	         }else {
 	             Intent install = new Intent();
 	             install.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
@@ -341,9 +381,11 @@ public class MainActivity extends Activity{
     	 }
     	 
     	 //Reinitialize services
-    	 speaker = new Speaker(this, "Usted a vuelto al menu principal");
-		    speaker.runOnInit = new Command() {
-	            public void runCommand() { startRecognition(); };
+    	 speaker = new Speaker(this, "Usted ha vuelto al menu principal");
+    	 	speaker.runOnInit = new Command() {
+    	 		public void runCommand() { 
+    	 			repetirMensajePrincipal(0,40000);
+ 		    	};
 	        };
 	    
 		    initializeSpeech();
@@ -351,8 +393,6 @@ public class MainActivity extends Activity{
      }
      }
    }
-    
-    
  }
 
     

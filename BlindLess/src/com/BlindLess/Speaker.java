@@ -15,13 +15,16 @@ public class Speaker implements OnInitListener {
     private String initMsg;
     public Command runOnInit;
      
-    public boolean ready = false;
+    private boolean ready;
+    public boolean initFinish;
      
     private boolean allowed = false;
      
     public Speaker(Context context, String msg){
         tts = new TextToSpeech(context, this);    
         initMsg = msg;
+        this.ready = false;
+        initFinish = false;
     }   
      
     public boolean isAllowed(){
@@ -39,16 +42,18 @@ public class Speaker implements OnInitListener {
 	        // locale
 			Locale locSpanish = new Locale("spa", "ARG");
 			tts.setLanguage(locSpanish);
-	        ready = true;
+	        this.ready = true;
 
 	        this.speak(this.initMsg);
 	        
 	        if (runOnInit != null) {
 	        	runOnInit.runCommand();
 			}
+
+        	initFinish = true;
 	        
 	    }else{
-	        ready = false;
+	    	this.ready = false;
 	    }
 	}
 	
@@ -57,7 +62,7 @@ public class Speaker implements OnInitListener {
 	    // Speak only if the TTS is ready
 	    // and the user has allowed speech
 	     
-	    if(ready) {
+	    if(this.ready) {
 	        HashMap<String, String> hash = new HashMap<String,String>();
 	        hash.put(TextToSpeech.Engine.KEY_PARAM_STREAM, 
 	                String.valueOf(AudioManager.STREAM_NOTIFICATION));
