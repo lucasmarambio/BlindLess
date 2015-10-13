@@ -1,15 +1,24 @@
 package com.BlindLess;
 
-
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.Handler;
 
 import org.opencv.android.OpenCVLoader;
+
 import com.BlindLess.R;
 import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
 
@@ -25,7 +34,6 @@ import android.view.View;
 import android.widget.Button;
 
 import org.opencv.imgproc.Imgproc;
-//RR 2015-09-27 [FIN].
 
 public class MainActivity extends Activity{
 
@@ -37,13 +45,18 @@ public class MainActivity extends Activity{
     public Speaker speaker; 
     private static final int TTS_CHECK = 10;
     private static final int CAMERA_ACTIVITY = 99;
+    private static final int CANT_IMAGES = 4;
     
     //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
     private Intent mSpeechRecognizerIntent; 
     private boolean mIslistening; 
     private Map<String, Command> commandDictionary = new HashMap<String, Command>();
-
+    
+    //Timer
+    private Timer timer;
+    private TimerTask task;
+	private android.os.Handler handler;
     
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +68,7 @@ public class MainActivity extends Activity{
 			buttonCamera = (Button)findViewById(R.id.buttonCamera);
 			buttonBillete = (Button)findViewById(R.id.buttonBillete);
 			buttonComparador = (Button)findViewById(R.id.ButtonComparador);
+			handler = new android.os.Handler();
 			
 			if (!OpenCVLoader.initDebug()) {
 		        // Handle initialization error
@@ -69,9 +83,7 @@ public class MainActivity extends Activity{
 		    startActivityForResult(check, TTS_CHECK);
 			
 			buttonCamera.setOnClickListener( new ButtonClickHandler() );
-			//[INICIO].
 			buttonBillete.setOnClickListener( new ButtonClickHandler() );
-//			[FIN].
 			buttonComparador.setOnClickListener( new ButtonClickHandler() );
 			
 			initializeSpeech();
@@ -101,8 +113,10 @@ public class MainActivity extends Activity{
 
 	    // Save the note's current draft, because the activity is stopping
 	    // and we want to be sure the current note progress isn't lost.
-	    if(mSpeechRecognizer != null) cleanSpeecher();
-	    if(speaker != null) speaker.destroy();
+	    if (mSpeechRecognizer != null) cleanSpeecher();
+	    if (speaker != null) speaker.destroy();
+	    if (timer != null) timer.cancel();
+	    if (timer != null) timer.purge();
 	    Log.i("MainActivity","onStopLeaving()");
 	}
 	
@@ -113,11 +127,14 @@ public class MainActivity extends Activity{
 	    
 	    // The activity is either being restarted or started for the first time
 	    // so this is where we should make sure that GPS is enabled
-	    speaker = new Speaker(this, "");
-	    speaker.runOnInit = new Command() {
-            public void runCommand() { startRecognition(); };
-        };
-    
+	    if (speaker == null || speaker.initFinish){ 
+	    	speaker = new Speaker(this, "");
+		    speaker.runOnInit = new Command() {
+		    	public void runCommand() { 
+		    		repetirMensajePrincipal(0,40000);
+ 		    	};
+	        };
+	    }
 	    initializeSpeech();
 	    Log.i("MainActivity","onRestartLeaving");
 	}
@@ -127,7 +144,6 @@ public class MainActivity extends Activity{
 	    	mSpeechRecognizer.stopListening();
 	    	mSpeechRecognizer.cancel();
 	    	mSpeechRecognizer.destroy();              
-
 	    }
 	    mSpeechRecognizer = null;
 	}
@@ -141,6 +157,8 @@ public class MainActivity extends Activity{
 	    // so this is where we should make sure that GPS is enabled
 	    if (speaker != null) speaker.destroy();
 	    if (mSpeechRecognizer != null) cleanSpeecher();
+	    if (timer != null) timer.cancel();
+	    if (timer != null) timer.purge();
 	    Log.i("MainActivity","onDestroyLeaving");
 	}
 
@@ -151,7 +169,6 @@ public class MainActivity extends Activity{
 		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
 		startActivityForResult(intent, CAMERA_ACTIVITY);
 	}
-    
 
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
@@ -162,31 +179,24 @@ public class MainActivity extends Activity{
 
 
 		SpeechRecognitionListener listener = 
-				new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
-										public void runCommand() { 
-											if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
-											initializeSpeech();
-											startRecognition();
-										};
-        });
+			new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
+											public void runCommand() { 
+												if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
+												initializeSpeech();
+												startRecognition();
+											};
+										 });
 		mSpeechRecognizer.setRecognitionListener(listener);
 	}
 	
-	
 	private void initDictionary() {
 		
-		commandDictionary.put("camara", new Command() {
+		commandDictionary.put("detectar texto", new Command() {
             public void runCommand() { 
-            	if(speaker != null) speaker.speak("Dijiste cámara"); 
+            	if(speaker != null) speaker.speak("Dijiste detectar texto"); 
             	iniciarActividadCamara(); 
-            	startRecognition(); 
+//            	startRecognition(); 
             	};
-        });
-		commandDictionary.put("iniciar", new Command() {
-            public void runCommand() { 
-            	if(speaker != null) speaker.speak("Dijiste Iniciar"); 
-            	startRecognition(); 
-        	};
         });
 		commandDictionary.put("detectar billete", new Command() {
             public void runCommand() { 
@@ -194,11 +204,11 @@ public class MainActivity extends Activity{
             	startRecognition(); 
         	};
         });
-		commandDictionary.put("nada", new Command() {
-            public void runCommand() { 
-            	if(speaker != null) speaker.speak("Comando de voz no reconocido"); 
-            	startRecognition(); 
-        	};
+		commandDictionary.put("repetir", new Command() {
+			public void runCommand() { 
+				if(speaker != null) speaker.speak("Dijiste repetir"); 
+				repetirMensajePrincipal(0,40000);
+	    	};
         });
 		commandDictionary.put("salir", new Command() {
             public void runCommand() { 
@@ -206,8 +216,14 @@ public class MainActivity extends Activity{
             	finish(); 
         	};
         });
+		commandDictionary.put("nada", new Command() {
+            public void runCommand() { 
+            	if(speaker != null) speaker.speak("Comando de voz no reconocido"); 
+            	startRecognition();
+            	repetirMensajePrincipal(20000,40000);
+        	};
+        });
 	}
-
 
 	public void startRecognition(){
 		Log.i("Speech", "StartRecognition call");
@@ -290,23 +306,23 @@ public class MainActivity extends Activity{
 				break;	
 //[FIN] Comenzando con las pruebas para detectar texto.			
 
-			case R.id.ButtonComparador:
+			case R.id.ButtonComparador:								
+				List<String> billetes = new ArrayList<String>();
+				for (int i = 0; i < CANT_IMAGES; i++) {
+					billetes.add("2_" + i);
+				}
+				for (int i = 0; i < CANT_IMAGES; i++) {
+					billetes.add("5_" + i);
+				}
+				for (int i = 0; i < CANT_IMAGES; i++) {
+					billetes.add("10_" + i);
+				}
+				for (int i = 0; i < CANT_IMAGES; i++) {
+					billetes.add("100_" + i);
+				}
 				
-				String naipe = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/naipe.jpg";
-				String cartel = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/cartel.jpg";
-				String billete_2_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_billete_posta_2.jpg";
-				String billete_100_pesos = "storage/sdcard0/PatronesBilletes/Billete 100 pesos/billete_100_0.jpg";
-				String billete_10 = "storage/sdcard0/PatronesBilletes/Billete 10 pesos/10_pesos.jpg";
-				String billete_10_pesos = "storage/sdcard0/PatronesBilletes/Billete 10 pesos/10_pesos_billete.jpg";
-				String billete_10_pesos_2 = "storage/sdcard0/PatronesBilletes/Billete 10 pesos/10_pesos_billete2.jpg";
-				String billete_50_pesos = "storage/sdcard0/PatronesBilletes/Billete 50 pesos/50_pesos_billete.jpg";
-				String patron_billete_2 =  "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_patron_rombos.JPG";
-				String patron_billete_2_abajo = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_inferior_der.JPG";
-				String patron_billete_2_escrito = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/texto_2_pesos.JPG";
-				String outFile = "storage/sdcard0/PatronesBilletes/Resultado.jpg";
-				int match_method = Imgproc.TM_CCOEFF_NORMED;
-				ImageComparator comparator = new ImageComparator();
-				comparator.comparate(billete_10_pesos_2, patron_billete_2, outFile, match_method);
+				MatchPatternsFor("supizq", billetes);
+				
 				break;
 			   
 			default:
@@ -314,21 +330,115 @@ public class MainActivity extends Activity{
 			}
     	}
 
+		private void MatchPatternsFor(String pattern, List<String> billetes) {
+			List<String> templates = new ArrayList<String>();
+			addTemplatesValue("2", pattern, templates);
+			addTemplatesValue("5", pattern, templates);
+			addTemplatesValue("10", pattern, templates);
+			addTemplatesValue("20", pattern, templates);
+			addTemplatesValue("50", pattern, templates);
+			addTemplatesValue("100", pattern, templates);
+			
+			if (pattern == "supizq"){
+				matchSupIzq(billetes, templates);
+			}
+			
+		}
+
+		private void matchSupIzq(List<String> billetes, List<String> templates) {
+			int match_method = Imgproc.TM_CCOEFF_NORMED;
+			startComparisson(billetes, templates, match_method, new CommandComparisson() {
+				
+				@Override
+				public double runCommand(String billeteToCheck, String templateToCheck,
+						String outFile, int match_method, String description) {
+					ImageComparator comparator = new ImageComparator();
+					return comparator.comparateSupIzq(billeteToCheck, templateToCheck, outFile, match_method, description);
+				}
+			});
+		}
+
+		private void startComparisson(List<String> billetes,
+				List<String> templates, int match_method, CommandComparisson comparisson) {
+			double maxVal;
+			String templateGanador;
+			for (String billete : billetes) {
+				maxVal = 0.0;
+				templateGanador = "";
+				String billeteToCheck = "storage/sdcard0/Pictures/PatronesBilletes/2 Images a Probar/billete_" + billete + ".jpg";
+				for (String template : templates) {	
+					
+					String templateToCheck = "storage/sdcard0/Pictures/PatronesBilletes/2 Pesos/" + template + ".jpg";
+					String outFile = "storage/sdcard0/Pictures/PatronesBilletes/Resultado" + billete + "_" + template + ".jpg";
+					double val = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, 
+							match_method, "Billete: " + billete + ", Template: " + template);
+							
+					if (val > maxVal)
+					{
+						maxVal = val;
+						templateGanador = template;
+					}
+				}
+				Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
+				speaker.speak("Es un billete de: " + templateGanador.substring(0, templateGanador.indexOf('_')) + " pesos");
+			}
+		}
+
+		private void addTemplatesValue(String value, String pattern, List<String> templates) {
+			templates.add(value + "_" + pattern + "_" + 20);
+			templates.add(value + "_" + pattern + "_" + 40);
+			templates.add(value + "_" + pattern + "_" + 60);
+			templates.add(value + "_" + pattern + "_" + 80);
+			templates.add(value + "_" + pattern + "_" + 100);
+		}
+
+    }
+    
+    public void mensajePrincipal(){
+    	speaker.speak("mensaje principal");
+    	//		speaker.speak("Pronuncie el comando detectar texto"
+//		  	  	  	+ "si desea ingresar al módulo de detección de textos");
+//		speaker.speak("Pronuncie el comando detectar billete"
+//			  		+ "si desea ingresar al módulo de reconocimiento de billetes");
+//		speaker.speak("Pronuncie el comando salir si desea salir de la aplicación");
+		startRecognition();
+    }
+    
+  //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.
+    public void repetirMensajePrincipal(int seg1, int seg2) {
+    	if (timer != null) {
+    		timer.cancel();
+    		timer.purge();
+    	}
+    	task = new TimerTask() {
+  		   	@Override
+  		   	public void run() {
+  		   		handler.post(new Runnable() {
+  		   			public void run() {
+  		   				mensajePrincipal();
+  		   			};
+  		   		});
+  		   	}
+  		};
+		timer = new Timer();
+		timer.schedule(task,seg1,seg2);
     }
     
 	//Text-to-Speech necessary method to initialize for each activity.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
      super.onActivityResult(requestCode, resultCode, data);
-
+     
      switch (requestCode) {
      case TTS_CHECK:{
 	    	 Log.i("Main Activity", "TTS_Check");
 	    	 if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
-	             speaker = new Speaker(this, "Bienvenidos a BlindLess");
-	 		    speaker.runOnInit = new Command() {
-		            public void runCommand() { startRecognition(); };
-		        };
+	            speaker = new Speaker(this, "Bienvenidos a BlindLess");
+	            speaker.runOnInit = new Command() {
+		 		    	public void runCommand() { 
+		 		    		repetirMensajePrincipal(0,40000);
+		 		    	};
+	            };
 	         }else {
 	             Intent install = new Intent();
 	             install.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
@@ -343,9 +453,11 @@ public class MainActivity extends Activity{
     	 }
     	 
     	 //Reinitialize services
-    	 speaker = new Speaker(this, "Usted a vuelto al menu principal");
-		    speaker.runOnInit = new Command() {
-	            public void runCommand() { startRecognition(); };
+    	 speaker = new Speaker(this, "Usted ha vuelto al menu principal");
+    	 	speaker.runOnInit = new Command() {
+    	 		public void runCommand() { 
+    	 			repetirMensajePrincipal(0,40000);
+ 		    	};
 	        };
 	    
 		    initializeSpeech();
@@ -353,8 +465,6 @@ public class MainActivity extends Activity{
      }
      }
    }
-    
-    
  }
 
     
