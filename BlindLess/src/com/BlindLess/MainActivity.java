@@ -6,10 +6,17 @@ import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import org.opencv.android.OpenCVLoader;
+
 import com.BlindLess.R;
 import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
 
@@ -37,6 +44,7 @@ public class MainActivity extends Activity{
     public Speaker speaker; 
     private static final int TTS_CHECK = 10;
     private static final int CAMERA_ACTIVITY = 99;
+    private static final int CANT_IMAGES = 4;
     
     //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
@@ -290,27 +298,91 @@ public class MainActivity extends Activity{
 				break;	
 //[FIN] Comenzando con las pruebas para detectar texto.			
 
-			case R.id.ButtonComparador:
+			case R.id.ButtonComparador:								
+				List<String> billetes = new ArrayList<String>();
+				for (int i = 0; i < CANT_IMAGES; i++) {
+					billetes.add("2_" + i);
+				}
+				for (int i = 0; i < CANT_IMAGES; i++) {
+					billetes.add("5_" + i);
+				}
+				for (int i = 0; i < CANT_IMAGES; i++) {
+					billetes.add("10_" + i);
+				}
+				for (int i = 0; i < CANT_IMAGES; i++) {
+					billetes.add("100_" + i);
+				}
 				
-				String naipe = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/naipe.jpg";
-				String cartel = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/cartel.jpg";
-				String billete_2_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_pesos_billete.jpg";
-				String billete_10_pesos = "storage/sdcard0/PatronesBilletes/Billete 10 pesos/10_pesos_billete.jpg";
-				String billete_10_pesos_2 = "storage/sdcard0/PatronesBilletes/Billete 10 pesos/10_pesos_billete2.jpg";
-				String billete_50_pesos = "storage/sdcard0/PatronesBilletes/Billete 50 pesos/50_pesos_billete.jpg";
-				String patron_billete_2 =  "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_patron_rombos.JPG";
-				String patron_billete_2_abajo = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_inferior_der.JPG";
-				String patron_billete_2_escrito = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/texto_2_pesos.JPG";
-				String outFile = "storage/sdcard0/PatronesBilletes/Resultado.jpg";
-				int match_method = Imgproc.TM_CCOEFF_NORMED;
-				ImageComparator comparator = new ImageComparator();
-				comparator.comparate(billete_2_pesos, patron_billete_2, outFile, match_method);
+				MatchPatternsFor("supizq", billetes);
+				
 				break;
 			   
 			default:
 				break;
 			}
     	}
+
+		private void MatchPatternsFor(String pattern, List<String> billetes) {
+			List<String> templates = new ArrayList<String>();
+			addTemplatesValue("2", pattern, templates);
+			addTemplatesValue("5", pattern, templates);
+			addTemplatesValue("10", pattern, templates);
+			addTemplatesValue("20", pattern, templates);
+			addTemplatesValue("50", pattern, templates);
+			addTemplatesValue("100", pattern, templates);
+			
+			if (pattern == "supizq"){
+				matchSupIzq(billetes, templates);
+			}
+			
+		}
+
+		private void matchSupIzq(List<String> billetes, List<String> templates) {
+			int match_method = Imgproc.TM_CCOEFF_NORMED;
+			startComparisson(billetes, templates, match_method, new CommandComparisson() {
+				
+				@Override
+				public double runCommand(String billeteToCheck, String templateToCheck,
+						String outFile, int match_method, String description) {
+					ImageComparator comparator = new ImageComparator();
+					return comparator.comparateSupIzq(billeteToCheck, templateToCheck, outFile, match_method, description);
+				}
+			});
+		}
+
+		private void startComparisson(List<String> billetes,
+				List<String> templates, int match_method, CommandComparisson comparisson) {
+			double maxVal;
+			String templateGanador;
+			for (String billete : billetes) {
+				maxVal = 0.0;
+				templateGanador = "";
+				String billeteToCheck = "storage/sdcard0/Pictures/PatronesBilletes/2 Images a Probar/billete_" + billete + ".jpg";
+				for (String template : templates) {	
+					
+					String templateToCheck = "storage/sdcard0/Pictures/PatronesBilletes/2 Pesos/" + template + ".jpg";
+					String outFile = "storage/sdcard0/Pictures/PatronesBilletes/Resultado" + billete + "_" + template + ".jpg";
+					double val = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, 
+							match_method, "Billete: " + billete + ", Template: " + template);
+							
+					if (val > maxVal)
+					{
+						maxVal = val;
+						templateGanador = template;
+					}
+				}
+				Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
+				speaker.speak("Es un billete de: " + templateGanador.substring(0, templateGanador.indexOf('_')) + " pesos");
+			}
+		}
+
+		private void addTemplatesValue(String value, String pattern, List<String> templates) {
+			templates.add(value + "_" + pattern + "_" + 20);
+			templates.add(value + "_" + pattern + "_" + 40);
+			templates.add(value + "_" + pattern + "_" + 60);
+			templates.add(value + "_" + pattern + "_" + 80);
+			templates.add(value + "_" + pattern + "_" + 100);
+		}
 
     }
     
