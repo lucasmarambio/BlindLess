@@ -250,6 +250,18 @@ public class CameraActivity extends Activity {
 	
 	private void initDictionary() {
 		
+		commandDictionary.put("ayuda", new Command() {
+            public void runCommand() { 
+            	if(speaker != null) 
+            	speaker.speak("Dijiste ayuda");
+            	speaker.speak("Sujetar firmemente el celular");
+            	speaker.speak("Alinear y centrar con el objeto a escanear");
+            	speaker.speak("Distanciar el celular del objeto entre 27 y 32 centímetros");
+            	speaker.speak("Aguardar la señal de reconocimiento efectivo"); 
+            	startRecognition();
+            	};
+        });
+		
 		commandDictionary.put("volver", new Command() {
             public void runCommand() { 
             	if(speaker != null) speaker.speak("Dijiste volver"); 
@@ -272,7 +284,6 @@ public class CameraActivity extends Activity {
             	startRecognition(); 
             	};
         });
-		
 	}
 	
 	public void startRecognition(){
