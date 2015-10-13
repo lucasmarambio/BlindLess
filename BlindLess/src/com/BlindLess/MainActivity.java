@@ -294,7 +294,9 @@ public class MainActivity extends Activity{
 				
 				String naipe = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/naipe.jpg";
 				String cartel = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/cartel.jpg";
-				String billete_2_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_pesos_billete.jpg";
+				String billete_2_pesos = "storage/sdcard0/PatronesBilletes/Billete 2 pesos/2_billete_posta_2.jpg";
+				String billete_100_pesos = "storage/sdcard0/PatronesBilletes/Billete 100 pesos/billete_100_0.jpg";
+				String billete_10 = "storage/sdcard0/PatronesBilletes/Billete 10 pesos/10_pesos.jpg";
 				String billete_10_pesos = "storage/sdcard0/PatronesBilletes/Billete 10 pesos/10_pesos_billete.jpg";
 				String billete_10_pesos_2 = "storage/sdcard0/PatronesBilletes/Billete 10 pesos/10_pesos_billete2.jpg";
 				String billete_50_pesos = "storage/sdcard0/PatronesBilletes/Billete 50 pesos/50_pesos_billete.jpg";
@@ -304,7 +306,7 @@ public class MainActivity extends Activity{
 				String outFile = "storage/sdcard0/PatronesBilletes/Resultado.jpg";
 				int match_method = Imgproc.TM_CCOEFF_NORMED;
 				ImageComparator comparator = new ImageComparator();
-				comparator.comparate(billete_2_pesos, patron_billete_2, outFile, match_method);
+				comparator.comparate(billete_10_pesos_2, patron_billete_2, outFile, match_method);
 				break;
 			   
 			default:
