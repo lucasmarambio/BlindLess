@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
 
@@ -17,7 +19,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.os.Bundle;
-import android.os.Environment;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
@@ -39,14 +40,20 @@ public class CameraActivity extends Activity {
     //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
     private Intent mSpeechRecognizerIntent;
-    private boolean mIslistening;  
+    private boolean mIsSpeaking;  
     private Map<String, Command> commandDictionary = new HashMap<String, Command>();
+    
+    //Timer
+    private Timer timer;
+    private TimerTask task;
+	private android.os.Handler handler;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         
     	super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+        handler = new android.os.Handler();
         
 		//Init command dictionary
 		initDictionary();
@@ -89,7 +96,7 @@ public class CameraActivity extends Activity {
 		@Override
 		public int runCommand(byte[] data, Camera camera) {
 			
-			File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+			File pictureFile = CommonMethods.getOutputMediaFile(MEDIA_TYPE_IMAGE);
 			if (pictureFile == null) {
 				Log.e("TAG",
 						"Error creating media file, check storage permissions: pictureFile== null");
@@ -135,39 +142,7 @@ public class CameraActivity extends Activity {
 		
 	};
 	
-	private static File getOutputMediaFile(int type) {
-		// To be safe, you should check that the SDCard is mounted
-		// using Environment.getExternalStorageState() before doing this.
 
-		File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-				Environment.DIRECTORY_PICTURES), "BlindLess Pics");
-		// This location works best if you want the created images to be shared
-		// between applications and persist after your app has been uninstalled.
-
-		// Create the storage directory if it does not exist
-		if (!mediaStorageDir.exists()) {
-			if (!mediaStorageDir.mkdirs()) {
-				Log.e("MyCameraApp", "failed to create directory");
-				return null;
-			}
-		}
-
-		// Create a media file name
-		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-				.format(new java.util.Date());
-		File mediaFile;
-		if (type == MEDIA_TYPE_IMAGE) {
-			mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-					"IMG_" + timeStamp + ".jpg");
-		} else if (type == MEDIA_TYPE_VIDEO) {
-			mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-					"VID_" + timeStamp + ".mp4");
-		} else {
-			return null;
-		}
-
-		return mediaFile;
-	}
     
 	@Override
 	protected void onStop() {
@@ -175,23 +150,14 @@ public class CameraActivity extends Activity {
 
 	    //Release camera resources
 	    if(mCamera != null) mCamera.release();
-	    if(mSpeechRecognizer != null) cleanSpeecher();
+	    cleanSpeecher();
 	    if(speaker != null) speaker.destroy();
+	    cleanTimer();
 	}
 	
 	@Override
 	protected void onRestart() {
 	    super.onRestart();  // Always call the superclass method first	    
-	}
-    
-    private void cleanSpeecher() {
-    	if(mSpeechRecognizer !=null){
-	    	mSpeechRecognizer.stopListening();
-	    	mSpeechRecognizer.cancel();
-	    	mSpeechRecognizer.destroy();              
-
-	    }
-	    mSpeechRecognizer = null;
 	}
 	
 	public static Camera getCameraInstance(){
@@ -252,27 +218,35 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put("ayuda", new Command() {
             public void runCommand() { 
-            	if(speaker != null) 
-            	speaker.speak("Dijiste ayuda");
-            	speaker.speak("Sujetar firmemente el celular");
-            	speaker.speak("Alinear y centrar con el objeto a escanear");
-            	speaker.speak("Distanciar el celular del objeto entre 27 y 32 centímetros");
-            	speaker.speak("Aguardar la señal de reconocimiento efectivo"); 
+            	List<String> textos = new ArrayList<String>();
+            	textos.add("Dijiste ayuda");
+            	textos.add("Sujetar firmemente el celular");
+            	textos.add("Alinear y centrar con el objeto a escanear");
+            	textos.add("Distanciar el celular del objeto entre 27 y 32 centímetros");
+            	textos.add("Aguardar la señal de reconocimiento efectivo"); 
+            	multipleSpeak(textos);
             	startRecognition();
             	};
         });
 		
 		commandDictionary.put("volver", new Command() {
             public void runCommand() { 
-            	if(speaker != null) speaker.speak("Dijiste volver"); 
+            	speak("Dijiste volver"); 
             	setResult(Activity.RESULT_OK);
             	finish();
             	};
         });
 		
+		commandDictionary.put("repetir", new Command() {
+            public void runCommand() { 
+            	speak("Dijiste repetir");
+            	startRecognition();
+            	};
+        });
+		
 		commandDictionary.put("salir", new Command() {
             public void runCommand() { 
-            	if(speaker != null) speaker.speak("Dijiste salir"); 
+            	speak("Dijiste salir"); 
             	setResult(Activity.RESULT_CANCELED);
             	finish();
             	};
@@ -280,22 +254,80 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put("nada", new Command() {
             public void runCommand() { 
-            	if(speaker != null) speaker.speak("Comando de voz no reconocido"); 
-            	startRecognition(); 
+            		speak("Comando de voz no reconocido");
+            		startRecognition();
             	};
         });
 	}
 	
+	public void multipleSpeak(List<String> textos){
+		mIsSpeaking = true;
+		cleanTimer();
+		for (String texto : textos) {
+			if(speaker != null) speaker.speak(texto);
+		}
+		mIsSpeaking = false;
+		repetirMensajePrincipal(CommonMethods.DECIR_MSJ_PRINCIPAL, CommonMethods.REPETIR_MSJ_PRINCIPAL);
+	}
+	
+	public void speak(String text){
+		mIsSpeaking = true;
+		cleanTimer();
+		if(speaker != null) speaker.speak(text);
+		mIsSpeaking = false;
+		repetirMensajePrincipal(CommonMethods.DECIR_MSJ_PRINCIPAL, CommonMethods.REPETIR_MSJ_PRINCIPAL);
+	}
+
+    public void mensajePrincipal(){
+		speak("Pronuncie el comando ayuda para iniciar la guía de"
+			+ "detección o el comando volver para retornar al Menú principal");
+    }
+	
+    //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.
+    public void repetirMensajePrincipal(int seg1, int seg2) {
+    	cleanTimer();
+    	task = new TimerTask() {
+  		   	@Override
+  		   	public void run() {
+  		   		handler.post(new Runnable() {
+  		   			public void run() {
+  		   				cleanSpeecher();
+  		   				mensajePrincipal();
+  		   				initializeSpeech();
+  		   				startRecognition();
+  		   			};
+  		   		});
+  		   	}
+  		};
+		timer = new Timer();
+		timer.schedule(task,seg1,seg2);
+    }
+    
 	public void startRecognition(){
 		Log.i("Speech", "StartRecognition call");
-		if (!mIslistening)
+		if (!mIsSpeaking)
 		{
 			Log.i("Speech", "Starting listening");
 		    mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
 		}
 	}
-
 	
+	public void cleanSpeecher() {
+	    if(mSpeechRecognizer !=null){
+	    	mSpeechRecognizer.stopListening();
+	    	mSpeechRecognizer.cancel();
+	    	mSpeechRecognizer.destroy();              
+	    }
+	    mSpeechRecognizer = null;
+	}
+	
+	public void cleanTimer() {
+		if (timer != null) {
+    		timer.cancel();
+    		timer.purge();
+    	}
+	}
+    
 	//Text-to-Speech necessary method to initialize for each activity.
 	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -307,7 +339,10 @@ public class CameraActivity extends Activity {
     	 if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
     		speaker = new Speaker(this, "");
  		    speaker.runOnInit = new Command() {
-	            public void runCommand() { startRecognition(); };
+	            public void runCommand() { 
+	            	mensajePrincipal();
+	        		startRecognition();
+	            };
 	        };
          }else {
              Intent install = new Intent();
