@@ -30,7 +30,11 @@ import android.widget.FrameLayout;
 
 public class CameraActivity extends Activity {
 
-    private Camera mCamera;
+    private static final String COMANDO_SALIR = "salir";
+	private static final String COMANDO_VOLVER = "volver";
+	private static final String COMANDO_AYUDA = "ayuda";
+	private static final String COMANDO_REPETIR = "repetir";
+	private Camera mCamera;
     private CameraPreview mPreview;
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
@@ -348,7 +352,7 @@ public class CameraActivity extends Activity {
 	
 	private void initDictionary() {
 		
-		commandDictionary.put("ayuda", new Command() {
+		commandDictionary.put(COMANDO_AYUDA, new Command() {
             public void runCommand() { 
             	List<String> textos = new ArrayList<String>();
             	textos.add("Dijiste ayuda");
@@ -361,7 +365,7 @@ public class CameraActivity extends Activity {
             	};
         });
 		
-		commandDictionary.put("volver", new Command() {
+		commandDictionary.put(COMANDO_VOLVER, new Command() {
             public void runCommand() { 
             	speak("Dijiste volver"); 
             	setResult(Activity.RESULT_OK);
@@ -369,14 +373,14 @@ public class CameraActivity extends Activity {
             	};
         });
 		
-		commandDictionary.put("repetir", new Command() {
+		commandDictionary.put(COMANDO_REPETIR, new Command() {
             public void runCommand() { 
             	speak("Dijiste repetir");
             	startRecognition();
             	};
         });
 		
-		commandDictionary.put("salir", new Command() {
+		commandDictionary.put(COMANDO_SALIR, new Command() {
             public void runCommand() { 
             	speak("Dijiste salir"); 
             	setResult(Activity.RESULT_CANCELED);
