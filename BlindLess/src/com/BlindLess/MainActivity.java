@@ -481,7 +481,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         	Log.d(DEBUG_TAG, "onDoubleTap: Silenciar Speaker" + event.toString());       	
         } else {
         	Log.d(DEBUG_TAG, "onDoubleTap: Módulo Texto" + event.toString());
-        	commandDictionary.get(COMANDO_DETECTAR_BILLETE);
+        	commandDictionary.get(COMANDO_DETECTAR_BILLETE).runCommand();;
         }
         
         return true;
@@ -501,7 +501,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
         else {
         	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Módulo Billete" + event.toString());
-        	commandDictionary.get(COMANDO_DETECTAR_TEXTO);
+        	commandDictionary.get(COMANDO_DETECTAR_TEXTO).runCommand();;
         }
         return true;
     }
