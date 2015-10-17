@@ -35,6 +35,10 @@ import org.opencv.imgproc.Imgproc;
 
 public class MainActivity extends Activity implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
 
+	private static final String COMANDO_SALIR = "salir";
+	private static final String COMANDO_REPETIR = "repetir";
+	private static final String COMANDO_DETECTAR_BILLETE = "detectar billete";
+	private static final String COMANDO_DETECTAR_TEXTO = "detectar texto";
 	private Button buttonCamera;
 	private Button buttonBillete;
 	private Button buttonComparador;
@@ -43,7 +47,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     public Speaker speaker; 
     private static final int TTS_CHECK = 10;
     private static final int CAMERA_ACTIVITY = 99;
-    private static final int CANT_IMAGES = 4;
     
     //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
@@ -164,9 +167,10 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
 	
 	//Leaving Activity methods
-    private void iniciarActividadCamara() {
+    private void iniciarActividadCamara(String modo) {
 		speaker.speak("Iniciando cámara");
 		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
+		intent.putExtra("modo", modo);
 		startActivityForResult(intent, CAMERA_ACTIVITY);
 	}
 
@@ -190,25 +194,25 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	
 	private void initDictionary() {
 		
-		commandDictionary.put("detectar texto", new Command() {
+		commandDictionary.put(COMANDO_DETECTAR_TEXTO, new Command() {
             public void runCommand() { 
 	            	speak("Dijiste detectar texto"); 
-	            	iniciarActividadCamara(); 
+	            	iniciarActividadCamara(CommonMethods.MODO_RECONOCIMIENTO_TEXTO); 
             	};
         });
-		commandDictionary.put("detectar billete", new Command() {
+		commandDictionary.put(COMANDO_DETECTAR_BILLETE, new Command() {
             public void runCommand() { 
             	speak("Dijiste detectar billete"); 
-            	startRecognition(); 
+            	iniciarActividadCamara(CommonMethods.MODO_RECONOCIMIENTO_BILLETE);
         	};
         });
-		commandDictionary.put("repetir", new Command() {
+		commandDictionary.put(COMANDO_REPETIR, new Command() {
 			public void runCommand() { 
 				speak("Dijiste repetir");
 				startRecognition();
 	    	};
         });
-		commandDictionary.put("salir", new Command() {
+		commandDictionary.put(COMANDO_SALIR, new Command() {
             public void runCommand() { 
             	speak("Dijiste salir"); 
             	finish(); 
@@ -233,7 +237,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     	    switch (view.getId()) {
 			case R.id.buttonCamera:
 //				SingletonTextToSpeech.getInstance(getApplicationContext()).sayHello("Iniciando Cámara");
-				iniciarActividadCamara();
+				iniciarActividadCamara(CommonMethods.MODO_RECONOCIMIENTO_TEXTO);
 				break;
 //[INICIO] Comenzando con las pruebas para detectar texto.
 			case R.id.buttonBillete:
@@ -297,23 +301,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 			case R.id.ButtonComparador:	
 //				ImagePreprocessor preprocessor = new ImagePreprocessor();
 //				preprocessor.imagePreprocess();
-				
-				List<String> billetes = new ArrayList<String>();
-				for (int i = 0; i < CANT_IMAGES; i++) {
-					billetes.add("2_" + i);
-				}
-				for (int i = 0; i < CANT_IMAGES; i++) {
-					billetes.add("5_" + i);
-				}
-				for (int i = 0; i < CANT_IMAGES; i++) {
-					billetes.add("10_" + i);
-				}
-				for (int i = 0; i < CANT_IMAGES; i++) {
-					billetes.add("100_" + i);
-				}
-				
-				MatchPatternsFor("supizq", billetes);
-				
+								
 				break;
 			   
 			default:
@@ -321,67 +309,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 			}
     	}
 
-		private void MatchPatternsFor(String pattern, List<String> billetes) {
-			List<String> templates = new ArrayList<String>();
-			addTemplatesValue("2", pattern, templates);
-			addTemplatesValue("5", pattern, templates);
-			addTemplatesValue("10", pattern, templates);
-			addTemplatesValue("20", pattern, templates);
-			addTemplatesValue("50", pattern, templates);
-			addTemplatesValue("100", pattern, templates);
-			
-			if (pattern == "supizq"){
-				matchSupIzq(billetes, templates);
-			}
-			
-		}
-
-		private void matchSupIzq(List<String> billetes, List<String> templates) {
-			int match_method = Imgproc.TM_CCOEFF_NORMED;
-			startComparisson(billetes, templates, match_method, new CommandComparisson() {
-				
-				@Override
-				public double runCommand(String billeteToCheck, String templateToCheck,
-						String outFile, int match_method, String description) {
-					ImageComparator comparator = new ImageComparator();
-					return comparator.comparateSupIzq(billeteToCheck, templateToCheck, outFile, match_method, description);
-				}
-			});
-		}
-
-		private void startComparisson(List<String> billetes,
-				List<String> templates, int match_method, CommandComparisson comparisson) {
-			double maxVal;
-			String templateGanador;
-			for (String billete : billetes) {
-				maxVal = 0.0;
-				templateGanador = "";
-				String billeteToCheck = "storage/sdcard0/Pictures/PatronesBilletes/2 Images a Probar/billete_" + billete + ".jpg";
-				for (String template : templates) {	
-					
-					String templateToCheck = "storage/sdcard0/Pictures/PatronesBilletes/2 Pesos/" + template + ".jpg";
-					String outFile = "storage/sdcard0/Pictures/PatronesBilletes/Resultado" + billete + "_" + template + ".jpg";
-					double val = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, 
-							match_method, "Billete: " + billete + ", Template: " + template);
-							
-					if (val > maxVal)
-					{
-						maxVal = val;
-						templateGanador = template;
-					}
-				}
-				Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
-				speaker.speak("Es un billete de: " + templateGanador.substring(0, templateGanador.indexOf('_')) + " pesos");
-			}
-		}
-
-		private void addTemplatesValue(String value, String pattern, List<String> templates) {
-			templates.add(value + "_" + pattern + "_" + 20);
-			templates.add(value + "_" + pattern + "_" + 40);
-			templates.add(value + "_" + pattern + "_" + 60);
-			templates.add(value + "_" + pattern + "_" + 80);
-			templates.add(value + "_" + pattern + "_" + 100);
-		}
+		
 
     }
     
@@ -553,7 +481,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         	Log.d(DEBUG_TAG, "onDoubleTap: Silenciar Speaker" + event.toString());       	
         } else {
         	Log.d(DEBUG_TAG, "onDoubleTap: Módulo Texto" + event.toString());
-        	iniciarActividadCamara();
+        	commandDictionary.get(COMANDO_DETECTAR_BILLETE);
         }
         
         return true;
@@ -573,7 +501,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
         else {
         	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Módulo Billete" + event.toString());
-        	iniciarActividadCamara();
+        	commandDictionary.get(COMANDO_DETECTAR_TEXTO);
         }
         return true;
     }

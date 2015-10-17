@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.opencv.imgproc.Imgproc;
+
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 import android.app.Activity;
@@ -32,6 +34,8 @@ public class CameraActivity extends Activity {
     private CameraPreview mPreview;
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
+
+    private static final int CANT_IMAGES = 4;
     
 	//text-to-speech fields
     public Speaker speaker; 
@@ -62,8 +66,9 @@ public class CameraActivity extends Activity {
 		Intent check = new Intent();
 	    check.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 	    startActivityForResult(check, TTS_CHECK);
-
-	    initializeServices();
+	    
+	    Bundle bundle = getIntent().getExtras();
+	    initializeServices(bundle.getString("modo"));
         
 //		preview.setOnTouchListener(new View.OnTouchListener() {
 //			
@@ -76,7 +81,14 @@ public class CameraActivity extends Activity {
 //		});     
     }
 
-	private FrameLayout initializeServices() {
+	private FrameLayout initializeServices(String modo) {
+		CommandCamera onTakePicture;
+		if (modo == CommonMethods.MODO_RECONOCIMIENTO_TEXTO) {
+			onTakePicture = textOnTakePicture;
+		}else {
+			onTakePicture = billeteOnTakePicture;
+		}
+		
         // Create an instance of Camera
 		if (mCamera == null) mCamera = getCameraInstance();
 
@@ -91,7 +103,7 @@ public class CameraActivity extends Activity {
 		return preview;
 	}
 	
-	private CommandCamera onTakePicture = new CommandCamera(){
+	private CommandCamera textOnTakePicture = new CommandCamera(){
 
 		@Override
 		public int runCommand(byte[] data, Camera camera) {
@@ -139,6 +151,101 @@ public class CameraActivity extends Activity {
 			return 0;
 		}
 
+		
+	};
+	
+	private CommandCamera billeteOnTakePicture = new CommandCamera(){
+
+		@Override
+		public int runCommand(byte[] data, Camera camera) {
+			
+			File pictureFile = CommonMethods.getOutputMediaFile(MEDIA_TYPE_IMAGE);
+			if (pictureFile == null) {
+				Log.e("TAG",
+						"Error creating media file, check storage permissions: pictureFile== null");
+				return -1;
+			}
+			
+			try {
+				FileOutputStream fos = new FileOutputStream(pictureFile);
+				fos.write(data);
+				fos.close();
+				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
+			} catch (FileNotFoundException e) {
+				Log.e("TAG", "File not found: " + e.getMessage());
+			} catch (IOException e) {
+				Log.e("TAG", "Error accessing file: " + e.getMessage());
+			}
+			Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
+						
+			List<String> billetes = new ArrayList<String>();
+			billetes.add(pictureFile.getPath());			
+			
+			MatchPatternsFor("supizq", billetes);
+
+			return 0;
+		}
+
+		private void MatchPatternsFor(String pattern, List<String> billetes) {
+			List<String> templates = new ArrayList<String>();
+			addTemplatesValue("2", pattern, templates);
+			addTemplatesValue("5", pattern, templates);
+			addTemplatesValue("10", pattern, templates);
+			addTemplatesValue("20", pattern, templates);
+			addTemplatesValue("50", pattern, templates);
+			addTemplatesValue("100", pattern, templates);
+			
+			if (pattern == "supizq"){
+				matchSupIzq(billetes, templates);
+			}
+			
+		}
+
+		private void matchSupIzq(List<String> billetes, List<String> templates) {
+			int match_method = Imgproc.TM_CCOEFF_NORMED;
+			startComparisson(billetes, templates, match_method, new CommandComparisson() {
+				
+				@Override
+				public double runCommand(String billeteToCheck, String templateToCheck,
+						String outFile, int match_method, String description) {
+					ImageComparator comparator = new ImageComparator();
+					return comparator.comparateSupIzq(billeteToCheck, templateToCheck, outFile, match_method, description);
+				}
+			});
+		}
+
+		private void startComparisson(List<String> billetes,
+				List<String> templates, int match_method, CommandComparisson comparisson) {
+			double maxVal;
+			String templateGanador;
+			for (String billeteToCheck : billetes) {
+				maxVal = 0.0;
+				templateGanador = "";
+				String descripcionBillete = billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1);
+				for (String template : templates) {	
+					String templateToCheck = "storage/sdcard0/Pictures/PatronesBilletes/2 Pesos/" + template + ".jpg";
+					String outFile = "storage/sdcard0/Pictures/PatronesBilletes/Resultado" + descripcionBillete + "_" + template + ".jpg";
+					double val = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, 
+							match_method, "Billete: " + descripcionBillete + ", Template: " + template);
+							
+					if (val > maxVal)
+					{
+						maxVal = val;
+						templateGanador = template;
+					}
+				}
+				Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
+				speaker.speak("Es un billete de: " + templateGanador.substring(0, templateGanador.indexOf('_')) + " pesos");
+			}
+		}
+
+		private void addTemplatesValue(String value, String pattern, List<String> templates) {
+			templates.add(value + "_" + pattern + "_" + 20);
+			templates.add(value + "_" + pattern + "_" + 40);
+			templates.add(value + "_" + pattern + "_" + 60);
+			templates.add(value + "_" + pattern + "_" + 80);
+			templates.add(value + "_" + pattern + "_" + 100);
+		}
 		
 	};
 	

@@ -3,6 +3,7 @@ package com.BlindLess;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+
 import android.os.Environment;
 import android.util.Log;
 
@@ -12,6 +13,8 @@ public class CommonMethods {
     public static final int MEDIA_TYPE_VIDEO = 2;
     public static final int DECIR_MSJ_PRINCIPAL = 10000;
     public static final int REPETIR_MSJ_PRINCIPAL = 10000;
+	public static final String MODO_RECONOCIMIENTO_TEXTO = "Texto";
+	public static final String MODO_RECONOCIMIENTO_BILLETE = "Billete";
 	
 	
 	public static File getOutputMediaFile(int type) {
