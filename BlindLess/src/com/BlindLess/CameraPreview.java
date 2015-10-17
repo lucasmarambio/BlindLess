@@ -169,8 +169,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     			try {
     				//Callback to handle the picture taken
-    				onTakePic.runCommand(data, camera);
+    				int returnMode = onTakePic.runCommand(data, camera);
     				
+    				switch (returnMode) {
+						case 1: //Reconoció bien el billete o texto, no tiene que sacar foto hasta tocar pantalla.
+							initTouch = true; //Permitimos que vuelva a sacar foto.
+							break;
+						case 0: //Falló el reconocimiento de billete, sacamos otra!
+							break;
+
+					default:
+						break;
+					}
     				//Restart camera preview
     				mCamera.setPreviewDisplay(mHolder);
     				mCamera.startPreview();

@@ -5,6 +5,7 @@ import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -40,11 +41,11 @@ public class ImageComparator extends Activity{
 	            Log.w("BLINDLESSTEST","***" + description + "-->" + "MaxValue: " + mmr.maxVal);
 	        }
 
-//	        // / Show me what you got
+	        // / Show me what you got
 //	        Imgproc.rectangle(img_preprocesed, matchLoc, new Point(matchLoc.x + templ_preprocesed.cols(),
 //	                matchLoc.y + templ_preprocesed.rows()), new Scalar(0, 255, 0));
 //	
-//	        // Save the visualized detection.
+////	        // Save the visualized detection.
 //	        Imgcodecs.imwrite(outFile, templ_preprocesed);
 //	        Log.i("Image Comparator", "termino la comparacion");
 	        
