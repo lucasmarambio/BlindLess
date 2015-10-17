@@ -11,8 +11,8 @@ public class CommonMethods {
 	
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
-    public static final int DECIR_MSJ_PRINCIPAL = 30000;
-    public static final int REPETIR_MSJ_PRINCIPAL = 30000;
+    public static final int DECIR_MSJ_PRINCIPAL = 20000;
+    public static final int REPETIR_MSJ_PRINCIPAL = 20000;
 	public static final String MODO_RECONOCIMIENTO_TEXTO = "Texto";
 	public static final String MODO_RECONOCIMIENTO_BILLETE = "Billete";
 	

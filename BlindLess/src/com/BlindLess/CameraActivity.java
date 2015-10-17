@@ -119,7 +119,7 @@ public class CameraActivity extends Activity {
 				return -1;
 			}
 			
-			speaker.speak("Imagen capturada. Aguarde mientras se procesa.");
+			speak("Imagen capturada. Aguarde mientras se procesa.");
 			
 			try {
 				FileOutputStream fos = new FileOutputStream(pictureFile);
@@ -149,9 +149,9 @@ public class CameraActivity extends Activity {
 			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
 			baseApi.setImage(bitmap);
 			String recognizedText = baseApi.getUTF8Text();
-			speaker.speak(recognizedText);
+			speak(recognizedText);
 			
-			speaker.speak("Texto leído.");
+			speak("Texto leído.");
 			return 0;
 		}
 
@@ -170,18 +170,18 @@ public class CameraActivity extends Activity {
 				return -1;
 			}
 			
-			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-			bitmap = Bitmap.createScaledBitmap(bitmap, 640, 480, true);
+//			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+//			bitmap = Bitmap.createScaledBitmap(bitmap, 640, 480, true);
 //			
 			try {
-//				FileOutputStream fos = new FileOutputStream(pictureFile);
-//				fos.write(data);
-//				fos.close();
-				
 				FileOutputStream fos = new FileOutputStream(pictureFile);
-				bitmap.compress(Bitmap.CompressFormat.PNG, 85, fos);
-				fos.flush();
+				fos.write(data);
 				fos.close();
+				
+//				FileOutputStream fos = new FileOutputStream(pictureFile);
+//				bitmap.compress(Bitmap.CompressFormat.PNG, 85, fos);
+//				fos.flush();
+//				fos.close();
 				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
 			} catch (FileNotFoundException e) {
 				Log.e("TAG", "File not found: " + e.getMessage());

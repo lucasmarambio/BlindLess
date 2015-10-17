@@ -154,7 +154,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	
 	//Leaving Activity methods
     private void iniciarActividadCamara(String modo) {
-		speaker.speak("Iniciando cámara");
+		speak("Iniciando cámara");
 		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
 		intent.putExtra("modo", modo);
 		startActivityForResult(intent, CAMERA_ACTIVITY);
@@ -217,14 +217,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
     
     public void mensajePrincipal(){
-    	speak("mensaje principal");
-//    	List<String> textos = new ArrayList<String>();
-//    	textos.add("Pronuncie el comando detectar billete"
-//  			 + "si desea ingresar al módulo de reconocimiento de billetes");
-//    	textos.add("Pronuncie el comando detectar texto"
-//	  	  	  	 + "si desea ingresar al módulo de detección de textos");
-//    	textos.add("Pronuncie el comando salir si desea salir de la aplicación");
-//    	multipleSpeak(textos);
+//    	speak("mensaje principal");
+    	List<String> textos = new ArrayList<String>();
+    	textos.add("Pronuncie el comando detectar billete"
+  			 + "si desea ingresar al módulo de reconocimiento de billetes");
+    	textos.add("Pronuncie el comando detectar texto"
+	  	  	  	 + "si desea ingresar al módulo de detección de textos");
+    	textos.add("Pronuncie el comando salir si desea salir de la aplicación");
+    	multipleSpeak(textos);
     }
     
   //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.
@@ -384,7 +384,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         	Log.d(DEBUG_TAG, "onDoubleTap: Silenciar Speaker" + event.toString());       	
         } else {
         	Log.d(DEBUG_TAG, "onDoubleTap: Módulo Texto" + event.toString());
-        	commandDictionary.get(COMANDO_DETECTAR_TEXTO).runCommand();;
+        	commandDictionary.get(COMANDO_DETECTAR_TEXTO).runCommand();
         }
         
         return true;
@@ -404,7 +404,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
         else {
         	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Módulo Billete" + event.toString());
-        	commandDictionary.get(COMANDO_DETECTAR_BILLETE).runCommand();;
+        	commandDictionary.get(COMANDO_DETECTAR_BILLETE).runCommand();
         }
         return true;
     }
