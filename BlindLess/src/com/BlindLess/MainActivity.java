@@ -3,6 +3,9 @@ package com.BlindLess;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.view.GestureDetectorCompat;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +33,7 @@ import android.widget.Button;
 
 import org.opencv.imgproc.Imgproc;
 
-public class MainActivity extends Activity{
+public class MainActivity extends Activity implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
 
 	private Button buttonCamera;
 	private Button buttonBillete;
@@ -52,6 +55,10 @@ public class MainActivity extends Activity{
     private Timer timer;
     private TimerTask task;
 	private android.os.Handler handler;
+	
+	//Detector de Taps
+	private static final String DEBUG_TAG = "Gestures";
+	private GestureDetectorCompat mDetector;
     
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +66,8 @@ public class MainActivity extends Activity{
 			
 			super.onCreate(savedInstanceState);
 			setContentView(R.layout.activity_main);
+			
+			mIsSpeaking = true;
 	
 			buttonCamera = (Button)findViewById(R.id.buttonCamera);
 			buttonBillete = (Button)findViewById(R.id.buttonBillete);
@@ -76,6 +85,10 @@ public class MainActivity extends Activity{
 			Intent check = new Intent();
 		    check.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 		    startActivityForResult(check, TTS_CHECK);
+		    
+		    //Inicializo y defino los taps
+		    mDetector = new GestureDetectorCompat(this,this);
+		    mDetector.setOnDoubleTapListener(this);
 			
 			buttonCamera.setOnClickListener( new ButtonClickHandler() );
 			buttonBillete.setOnClickListener( new ButtonClickHandler() );
@@ -281,7 +294,10 @@ public class MainActivity extends Activity{
 				break;	
 //[FIN] Comenzando con las pruebas para detectar texto.			
 
-			case R.id.ButtonComparador:								
+			case R.id.ButtonComparador:	
+				ImagePreprocessor preprocessor = new ImagePreprocessor();
+				preprocessor.imagePreprocess();
+				
 				List<String> billetes = new ArrayList<String>();
 				for (int i = 0; i < CANT_IMAGES; i++) {
 					billetes.add("2_" + i);
@@ -485,6 +501,82 @@ public class MainActivity extends Activity{
 		mIsSpeaking = false;
 		repetirMensajePrincipal(CommonMethods.DECIR_MSJ_PRINCIPAL, CommonMethods.REPETIR_MSJ_PRINCIPAL);
 	}
+
+    @Override 
+    public boolean onTouchEvent(MotionEvent event){ 
+        this.mDetector.onTouchEvent(event);
+        // Be sure to call the superclass implementation
+        return super.onTouchEvent(event);
+    }
+
+    @Override
+    public boolean onDown(MotionEvent event) { 
+        Log.d(DEBUG_TAG,"onDown: " + event.toString()); 
+        return true;
+    }
+
+    @Override
+    public boolean onFling(MotionEvent event1, MotionEvent event2, 
+            float velocityX, float velocityY) {
+        Log.d(DEBUG_TAG, "onFling: " + event1.toString()+event2.toString());
+        return true;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onLongPress: " + event.toString()); 
+        	finish(); 
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+            float distanceY) {
+        Log.d(DEBUG_TAG, "onScroll: " + e1.toString()+e2.toString());
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onSingleTapUp: " + event.toString());
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTap(MotionEvent event) {
+        
+        if(mIsSpeaking) {
+        	Log.d(DEBUG_TAG, "onDoubleTap: Silenciar Speaker" + event.toString());       	
+        } else {
+        	Log.d(DEBUG_TAG, "onDoubleTap: Módulo Texto" + event.toString());
+        	iniciarActividadCamara();
+        }
+        
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onDoubleTapEvent: Módulo Texto" + event.toString());
+        return true;
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent event) {
+    	 
+        if(mIsSpeaking) {
+        	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Silenciar Speaker" + event.toString());
+        }
+        else {
+        	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Módulo Billete" + event.toString());
+        	iniciarActividadCamara();
+        }
+        return true;
+    }
  }
 
     
