@@ -3,6 +3,9 @@ package com.BlindLess;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.view.GestureDetectorCompat;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,10 +27,8 @@ import android.widget.Button;
 
 import org.opencv.imgproc.Imgproc;
 
-public class MainActivity extends Activity{
+public class MainActivity extends Activity implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
 
-	private Button buttonComparador;
-	
 	//text-to-speech fields
     public Speaker speaker; 
     private static final int TTS_CHECK = 10;
@@ -44,6 +45,10 @@ public class MainActivity extends Activity{
     private Timer timer;
     private TimerTask task;
 	private android.os.Handler handler;
+	
+	//Detector de Taps
+	private static final String DEBUG_TAG = "Gestures";
+	private GestureDetectorCompat mDetector;
     
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -51,8 +56,9 @@ public class MainActivity extends Activity{
 			
 			super.onCreate(savedInstanceState);
 			setContentView(R.layout.activity_main);
+			
+			mIsSpeaking = true;
 	
-			buttonComparador = (Button)findViewById(R.id.ButtonComparador);
 			handler = new android.os.Handler();
 			
 			if (!OpenCVLoader.initDebug()) {
@@ -66,8 +72,10 @@ public class MainActivity extends Activity{
 			Intent check = new Intent();
 		    check.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 		    startActivityForResult(check, TTS_CHECK);
-			
-			buttonComparador.setOnClickListener( new ButtonClickHandler() );
+		    
+		    //Inicializo y defino los taps
+		    mDetector = new GestureDetectorCompat(this,this);
+		    mDetector.setOnDoubleTapListener(this);
 			
 			initializeSpeech();    
 		
@@ -196,35 +204,6 @@ public class MainActivity extends Activity{
         });
 	}
 
-	//To remove.. buttons!
-    public class ButtonClickHandler implements View.OnClickListener 
-    {
-    	public void onClick( View view ){
-    	    switch (view.getId()) {
-			case R.id.ButtonComparador:								
-				List<String> billetes = new ArrayList<String>();
-				for (int i = 0; i < CANT_IMAGES; i++) {
-					billetes.add("2_" + i);
-				}
-				for (int i = 0; i < CANT_IMAGES; i++) {
-					billetes.add("5_" + i);
-				}
-				for (int i = 0; i < CANT_IMAGES; i++) {
-					billetes.add("10_" + i);
-				}
-				for (int i = 0; i < CANT_IMAGES; i++) {
-					billetes.add("100_" + i);
-				}
-				
-				MatchPatternsFor("supizq", billetes);
-				
-				break;
-			   
-			default:
-				break;
-			}
-    	}
-
 		private void MatchPatternsFor(String pattern, List<String> billetes) {
 			List<String> templates = new ArrayList<String>();
 			addTemplatesValue("2", pattern, templates);
@@ -287,15 +266,14 @@ public class MainActivity extends Activity{
 			templates.add(value + "_" + pattern + "_" + 100);
 		}
 
-    }
     
     public void mensajePrincipal(){
     	speak("mensaje principal");
 //    	List<String> textos = new ArrayList<String>();
-//    	textos.add("Pronuncie el comando detectar texto"
-//	  	  	  	+ "si desea ingresar al módulo de detección de textos");
 //    	textos.add("Pronuncie el comando detectar billete"
-//		  		+ "si desea ingresar al módulo de reconocimiento de billetes");
+//  			 + "si desea ingresar al módulo de reconocimiento de billetes");
+//    	textos.add("Pronuncie el comando detectar texto"
+//	  	  	  	 + "si desea ingresar al módulo de detección de textos");
 //    	textos.add("Pronuncie el comando salir si desea salir de la aplicación");
 //    	multipleSpeak(textos);
     }
@@ -405,6 +383,82 @@ public class MainActivity extends Activity{
 		mIsSpeaking = false;
 		repetirMensajePrincipal(CommonMethods.DECIR_MSJ_PRINCIPAL, CommonMethods.REPETIR_MSJ_PRINCIPAL);
 	}
+
+    @Override 
+    public boolean onTouchEvent(MotionEvent event){ 
+        this.mDetector.onTouchEvent(event);
+        // Be sure to call the superclass implementation
+        return super.onTouchEvent(event);
+    }
+
+    @Override
+    public boolean onDown(MotionEvent event) { 
+        Log.d(DEBUG_TAG,"onDown: " + event.toString()); 
+        return true;
+    }
+
+    @Override
+    public boolean onFling(MotionEvent event1, MotionEvent event2, 
+            float velocityX, float velocityY) {
+        Log.d(DEBUG_TAG, "onFling: " + event1.toString()+event2.toString());
+        return true;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onLongPress: " + event.toString()); 
+        	finish(); 
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+            float distanceY) {
+        Log.d(DEBUG_TAG, "onScroll: " + e1.toString()+e2.toString());
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onSingleTapUp: " + event.toString());
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTap(MotionEvent event) {
+        
+        if(mIsSpeaking) {
+        	Log.d(DEBUG_TAG, "onDoubleTap: Silenciar Speaker" + event.toString());       	
+        } else {
+        	Log.d(DEBUG_TAG, "onDoubleTap: Módulo Texto" + event.toString());
+        	iniciarActividadCamara();
+        }
+        
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onDoubleTapEvent: Módulo Texto" + event.toString());
+        return true;
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent event) {
+    	 
+        if(mIsSpeaking) {
+        	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Silenciar Speaker" + event.toString());
+        }
+        else {
+        	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Módulo Billete" + event.toString());
+        	iniciarActividadCamara();
+        }
+        return true;
+    }
  }
 
     

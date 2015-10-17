@@ -7,5 +7,6 @@
     <string name="reconocerVoz">Iniciando Reconocimiento de Voz</string>
     <string name="compararImagenes">Comparar Imagenes</string>
     <string name="blindlessLogo">BlindLess Logo</string>
+    <string name="tituloLayout">Bienvenido a BlindLess</string>
 
 </resources>
