@@ -83,7 +83,7 @@ public class CameraActivity extends Activity {
 
 	private FrameLayout initializeServices(String modo) {
 		CommandCamera onTakePicture;
-		if (modo == CommonMethods.MODO_RECONOCIMIENTO_TEXTO) {
+		if (modo.equals(CommonMethods.MODO_RECONOCIMIENTO_TEXTO)) {
 			onTakePicture = textOnTakePicture;
 		}else {
 			onTakePicture = billeteOnTakePicture;
@@ -166,9 +166,17 @@ public class CameraActivity extends Activity {
 				return -1;
 			}
 			
+			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+			bitmap = Bitmap.createScaledBitmap(bitmap, 640, 480, true);
+//			
 			try {
+//				FileOutputStream fos = new FileOutputStream(pictureFile);
+//				fos.write(data);
+//				fos.close();
+				
 				FileOutputStream fos = new FileOutputStream(pictureFile);
-				fos.write(data);
+				bitmap.compress(Bitmap.CompressFormat.PNG, 85, fos);
+				fos.flush();
 				fos.close();
 				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
 			} catch (FileNotFoundException e) {
@@ -181,12 +189,10 @@ public class CameraActivity extends Activity {
 			List<String> billetes = new ArrayList<String>();
 			billetes.add(pictureFile.getPath());			
 			
-			MatchPatternsFor("supizq", billetes);
-
-			return 0;
+			return MatchPatternsFor("supizq", billetes);
 		}
 
-		private void MatchPatternsFor(String pattern, List<String> billetes) {
+		private int MatchPatternsFor(String pattern, List<String> billetes) {
 			List<String> templates = new ArrayList<String>();
 			addTemplatesValue("2", pattern, templates);
 			addTemplatesValue("5", pattern, templates);
@@ -196,14 +202,14 @@ public class CameraActivity extends Activity {
 			addTemplatesValue("100", pattern, templates);
 			
 			if (pattern == "supizq"){
-				matchSupIzq(billetes, templates);
+				return matchSupIzq(billetes, templates);
 			}
-			
+			return 0;
 		}
 
-		private void matchSupIzq(List<String> billetes, List<String> templates) {
+		private int matchSupIzq(List<String> billetes, List<String> templates) {
 			int match_method = Imgproc.TM_CCOEFF_NORMED;
-			startComparisson(billetes, templates, match_method, new CommandComparisson() {
+			return startComparisson(billetes, templates, match_method, new CommandComparisson() {
 				
 				@Override
 				public double runCommand(String billeteToCheck, String templateToCheck,
@@ -214,37 +220,56 @@ public class CameraActivity extends Activity {
 			});
 		}
 
-		private void startComparisson(List<String> billetes,
+		private int startComparisson(List<String> billetes,
 				List<String> templates, int match_method, CommandComparisson comparisson) {
-			double maxVal;
-			String templateGanador;
+			double maxVal, val;
+			String templateGanador, actualTemplate, templateNumber = "";
 			for (String billeteToCheck : billetes) {
 				maxVal = 0.0;
+				val = 0.0;
 				templateGanador = "";
+				actualTemplate = templates.get(0).substring(0, templates.get(0).indexOf('_'));
 				String descripcionBillete = billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1);
 				for (String template : templates) {	
+					templateNumber = template.substring(0, template.indexOf('_'));
 					String templateToCheck = "storage/sdcard0/Pictures/PatronesBilletes/2 Pesos/" + template + ".jpg";
 					String outFile = "storage/sdcard0/Pictures/PatronesBilletes/Resultado" + descripcionBillete + "_" + template + ".jpg";
-					double val = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, 
+					double valAux = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, 
 							match_method, "Billete: " + descripcionBillete + ", Template: " + template);
-							
-					if (val > maxVal)
-					{
-						maxVal = val;
-						templateGanador = template;
+						
+					if (actualTemplate.equals(templateNumber)){
+						val = val + valAux;
+					}else {
+						if (val > maxVal && val > 1.5)
+						{
+							maxVal = val;
+							templateGanador = actualTemplate;
+						}
+						val = valAux;
+						actualTemplate = templateNumber;
 					}
 				}
-				Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
-				speaker.speak("Es un billete de: " + templateGanador.substring(0, templateGanador.indexOf('_')) + " pesos");
+				
+				if (val > maxVal && val > 1.5)
+				{
+					maxVal = val;
+					templateGanador = templateNumber;
+				}
+				
+				if (maxVal > 0.0) {
+					Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
+					speak("Es un billete de: " + templateGanador + " pesos");
+					return 1;
+				}
 			}
+			
+			return 0;
 		}
 
 		private void addTemplatesValue(String value, String pattern, List<String> templates) {
-			templates.add(value + "_" + pattern + "_" + 20);
 			templates.add(value + "_" + pattern + "_" + 40);
 			templates.add(value + "_" + pattern + "_" + 60);
 			templates.add(value + "_" + pattern + "_" + 80);
-			templates.add(value + "_" + pattern + "_" + 100);
 		}
 		
 	};
