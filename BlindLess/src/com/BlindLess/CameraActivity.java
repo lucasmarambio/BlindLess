@@ -142,7 +142,7 @@ public class CameraActivity extends Activity {
 			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789%$@#");
 			baseApi.setVariable(TessBaseAPI.VAR_CHAR_BLACKLIST, "!^&*()_+=-[]}{;:'\"\\|~`,./<>?");
 			
-			baseApi.init("/storage/sdcard0/", "spa");
+			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
 			baseApi.setImage(bitmap);
 			String recognizedText = baseApi.getUTF8Text();
 			speaker.speak(recognizedText);
@@ -232,8 +232,8 @@ public class CameraActivity extends Activity {
 				String descripcionBillete = billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1);
 				for (String template : templates) {	
 					templateNumber = template.substring(0, template.indexOf('_'));
-					String templateToCheck = "storage/sdcard0/Pictures/PatronesBilletes/2 Pesos/" + template + ".jpg";
-					String outFile = "storage/sdcard0/Pictures/PatronesBilletes/Resultado" + descripcionBillete + "_" + template + ".jpg";
+					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";
+					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultado" + descripcionBillete + "_" + template + ".jpg";
 					double valAux = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, 
 							match_method, "Billete: " + descripcionBillete + ", Template: " + template);
 						
