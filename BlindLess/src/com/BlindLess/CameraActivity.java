@@ -115,7 +115,7 @@ public class CameraActivity extends Activity {
 				return -1;
 			}
 			
-			speaker.speak("Imagen capturada. Aguarde mientras se procesa.");
+			speak("Imagen capturada. Aguarde mientras se procesa.");
 			
 			try {
 				FileOutputStream fos = new FileOutputStream(pictureFile);
@@ -145,9 +145,9 @@ public class CameraActivity extends Activity {
 			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
 			baseApi.setImage(bitmap);
 			String recognizedText = baseApi.getUTF8Text();
-			speaker.speak(recognizedText);
+			speak(recognizedText);
 			
-			speaker.speak("Texto leído.");
+			speak("Texto leído.");
 			return 0;
 		}
 

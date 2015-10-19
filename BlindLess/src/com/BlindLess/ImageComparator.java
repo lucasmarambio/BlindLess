@@ -43,11 +43,11 @@ public class ImageComparator extends Activity{
 	        }
 
 	        // / Show me what you got
-//	        Imgproc.rectangle(img_preprocesed, matchLoc, new Point(matchLoc.x + templ_preprocesed.cols(),
-//	                matchLoc.y + templ_preprocesed.rows()), new Scalar(0, 255, 0));
-//	
-////	        // Save the visualized detection.
-//	        Imgcodecs.imwrite(outFile, templ_preprocesed);
+	        Imgproc.rectangle(img_preprocesed, matchLoc, new Point(matchLoc.x + templ_preprocesed.cols(),
+	                matchLoc.y + templ_preprocesed.rows()), new Scalar(0, 255, 0));
+	
+//	        // Save the visualized detection.
+	        Imgcodecs.imwrite(outFile, img_preprocesed);
 //	        Log.i("Image Comparator", "termino la comparacion");
 	        
 	        return mmr.maxVal;
