@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.opencv.imgproc.Imgproc;
-
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 import android.app.Activity;
@@ -38,8 +36,6 @@ public class CameraActivity extends Activity {
     private CameraPreview mPreview;
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
-
-    private static final int CANT_IMAGES = 4;
     
 	//text-to-speech fields
     public Speaker speaker; 
@@ -170,19 +166,19 @@ public class CameraActivity extends Activity {
 				return -1;
 			}
 			
-			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-			bitmap = Bitmap.createScaledBitmap(bitmap, 640, 480, true);
+//			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+//			bitmap = Bitmap.createScaledBitmap(bitmap, 640, 480, true);
 //			
 			try {
-//				FileOutputStream fos = new FileOutputStream(pictureFile);
-//				fos.write(data);
-//				fos.close();
-				
 				FileOutputStream fos = new FileOutputStream(pictureFile);
-				bitmap.compress(Bitmap.CompressFormat.PNG, 85, fos);
-				fos.flush();
+				fos.write(data);
 				fos.close();
-				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
+				
+//				FileOutputStream fos = new FileOutputStream(pictureFile);
+//				bitmap.compress(Bitmap.CompressFormat.PNG, 85, fos);
+//				fos.flush();
+//				fos.close();
+//				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
 			} catch (FileNotFoundException e) {
 				Log.e("TAG", "File not found: " + e.getMessage());
 			} catch (IOException e) {
@@ -191,8 +187,9 @@ public class CameraActivity extends Activity {
 			Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
 						
 			List<String> billetes = new ArrayList<String>();
-			billetes.add(pictureFile.getPath());			
+			billetes.add(pictureFile.getPath());	
 			
+			//Old Method to detect supizq value from picture
 			return MatchPatternsFor("supizq", billetes);
 		}
 
@@ -206,24 +203,58 @@ public class CameraActivity extends Activity {
 			addTemplatesValue("100", pattern, templates);
 			
 			if (pattern == "supizq"){
+//				Old Method
+//					return matchSupIzq(billetes, templates);
+//				New Method
 				return matchSupIzq(billetes, templates);
 			}
 			return 0;
 		}
 
+//		private int matchSupIzq(List<String> billetes, List<String> templates) {
+//			int match_method = Imgproc.TM_CCOEFF_NORMED;
+//			return startComparisson(billetes, templates, match_method, new CommandComparisson() {
+//				
+//				@Override
+//				public double runCommand(String billeteToCheck, String templateToCheck,
+//						String outFile, int match_method, String description) {
+//					ImageComparator comparator = new ImageComparator();
+//					return comparator.comparateSupIzq(billeteToCheck, templateToCheck, outFile, match_method, description);
+//				}
+//			});
+//		}
+
 		private int matchSupIzq(List<String> billetes, List<String> templates) {
-			int match_method = Imgproc.TM_CCOEFF_NORMED;
-			return startComparisson(billetes, templates, match_method, new CommandComparisson() {
-				
-				@Override
-				public double runCommand(String billeteToCheck, String templateToCheck,
-						String outFile, int match_method, String description) {
-					ImageComparator comparator = new ImageComparator();
-					return comparator.comparateSupIzq(billeteToCheck, templateToCheck, outFile, match_method, description);
+			/*INICIALIZO TESSERACT*/
+			ImageComparator comparator = new ImageComparator();
+			TessBaseAPI baseApi = new TessBaseAPI();
+			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
+			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "0123456789");
+			
+			for (String billeteToCheck : billetes) {
+				for (String template : templates) {
+					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";
+					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultado" + 
+						billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1) 
+						+ "_" + template + ".jpg";
+					Bitmap supIzq = comparator.readSupIzq(billeteToCheck, templateToCheck, outFile);
+					baseApi.setImage(supIzq);
+					String textoLeido = baseApi.getUTF8Text();
+					Log.w("BLINDLESSTEST","Leyó: " + textoLeido);
+					String billeteReconocido = CommonMethods.esBilleteValido(textoLeido);
+					if (!billeteReconocido.equals("")) {
+						speak("Es un billete de: " + billeteReconocido + " pesos");
+						return 1;
+					}
 				}
-			});
+			}
+			Log.w("BLINDLESSTEST","No se encontró patrón amigo");
+			return 1;//TODO: Tiene que devolver 0, para sacar una foto automatica, pero por ahora que devuelva 1.
 		}
 
+
+		//No usado por ahora, pero sirve para hacer la vieja comparación
+		/*
 		private int startComparisson(List<String> billetes,
 				List<String> templates, int match_method, CommandComparisson comparisson) {
 			double maxVal, val;
@@ -269,7 +300,9 @@ public class CameraActivity extends Activity {
 			
 			return 0;
 		}
-
+*/
+		
+		
 		private void addTemplatesValue(String value, String pattern, List<String> templates) {
 			templates.add(value + "_" + pattern + "_" + 40);
 			templates.add(value + "_" + pattern + "_" + 60);

@@ -3,7 +3,6 @@ package com.BlindLess;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
-
 import android.os.Environment;
 import android.util.Log;
 
@@ -15,6 +14,10 @@ public class CommonMethods {
     public static final int REPETIR_MSJ_PRINCIPAL = 30000;
 	public static final String MODO_RECONOCIMIENTO_TEXTO = "Texto";
 	public static final String MODO_RECONOCIMIENTO_BILLETE = "Billete";
+	private static String[] billetesReconocidos = {
+		"2", "5", "10","20","50","100",
+		"dos","cinco","diez","veinte","cincuenta","cien"
+		};
 	
 	
 	public static File getOutputMediaFile(int type) {
@@ -51,4 +54,19 @@ public class CommonMethods {
 		return mediaFile;
 	}
 	
+	public static String esBilleteValido(String texto){
+		return stringContainsItemFromList(texto, billetesReconocidos);
+	}
+	
+	public static String stringContainsItemFromList(String inputString, String[] items)
+	{
+	    for(int i =0; i < items.length; i++)
+	    {
+	        if(inputString.contains(items[i]))
+	        {
+	            return items[i];
+	        }
+	    }
+	    return "";
+	}
 }
