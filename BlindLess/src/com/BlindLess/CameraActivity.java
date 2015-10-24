@@ -368,7 +368,7 @@ public class CameraActivity extends Activity {
 	        //Choose another supported mode
 	    }
 //	    camera.setDisplayOrientation(90);
-	    camera.setParameters(params);
+//	    camera.setParameters(params);
 	    
 	    return camera; // returns null if camera is unavailable
 	}

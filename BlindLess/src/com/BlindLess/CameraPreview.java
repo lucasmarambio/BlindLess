@@ -23,6 +23,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private boolean initTouch = true;
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
+    private List<Camera.Size> mSupportedPreviewSizes;
+    private Camera.Size mPreviewSize;
     
 	private boolean cameraConfigured = false;
 	
@@ -30,6 +32,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         super(context);
         mCamera = camera;
         onTakePic = callbackOnTakePic;
+        mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
 
         // Install a SurfaceHolder.Callback so we get notified when the
         // underlying surface is created and destroyed.
@@ -61,7 +64,50 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             Log.d("ERROR", "Error setting camera preview: " + e.getMessage());
         }
     }
+    
+    private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
+        final double ASPECT_TOLERANCE = 0.1;
+        double targetRatio=(double)h / w;
+
+        if (sizes == null) return null;
+
+        Camera.Size optimalSize = null;
+        double minDiff = Double.MAX_VALUE;
+
+        int targetHeight = h;
+
+        for (Camera.Size size : sizes) {
+            double ratio = (double) size.width / size.height;
+            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
+            if (Math.abs(size.height - targetHeight) < minDiff) {
+                optimalSize = size;
+                minDiff = Math.abs(size.height - targetHeight);
+            }
+        }
+
+        if (optimalSize == null) {
+            minDiff = Double.MAX_VALUE;
+            for (Camera.Size size : sizes) {
+                if (Math.abs(size.height - targetHeight) < minDiff) {
+                    optimalSize = size;
+                    minDiff = Math.abs(size.height - targetHeight);
+                }
+            }
+        }
+        return optimalSize;
+    }
  
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        final int width = resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec);
+        final int height = resolveSize(getSuggestedMinimumHeight(), heightMeasureSpec);
+        setMeasuredDimension(width, height);
+
+        if (mSupportedPreviewSizes != null) {
+           mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
+        }
+    }    
+    
     public void surfaceDestroyed(SurfaceHolder holder) {
         // empty. Take care of releasing the Camera preview in your activity.
     }
@@ -87,9 +133,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // start preview with new settings
         try {
-        	initPreview(w, h);
-            mCamera.setPreviewDisplay(mHolder);
-            mCamera.startPreview();
+        	Camera.Parameters parameters = mCamera.getParameters();
+			parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+        	mCamera.setParameters(parameters);
+        	mCamera.startPreview();
 //            mCamera.takePicture(null, null, mPictureCallback);
 
         } catch (Exception e){
