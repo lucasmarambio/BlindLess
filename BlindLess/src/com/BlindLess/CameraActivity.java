@@ -47,6 +47,7 @@ public class CameraActivity extends Activity {
     private Intent mSpeechRecognizerIntent;
     private boolean mIsSpeaking;  
     private Map<String, Command> commandDictionary = new HashMap<String, Command>();
+    private String actualModo;
     
     //Timer
     private Timer timer;
@@ -69,7 +70,8 @@ public class CameraActivity extends Activity {
 	    startActivityForResult(check, TTS_CHECK);
 	    
 	    Bundle bundle = getIntent().getExtras();
-	    initializeServices(bundle.getString("modo"));
+	    actualModo = bundle.getString("modo");
+	    initializeServices(actualModo);
         
 //		preview.setOnTouchListener(new View.OnTouchListener() {
 //			
@@ -334,37 +336,7 @@ public class CameraActivity extends Activity {
 	
 
     
-	@Override
-	protected void onStop() {
-	    super.onStop();  // Always call the superclass method first
 
-	    //Release camera resources
-	    if(mCamera != null) mCamera.release();
-	    cleanSpeecher();
-	    if(speaker != null) speaker.destroy();
-	    cleanTimer();
-	}
-	
-	@Override
-	protected void onRestart() {
-	    super.onRestart();  // Always call the superclass method first	 
-	    
-	 // The activity is either being restarted or started for the first time
-	    // so this is where we should make sure that GPS is enabled
-
-        mCamera.setPreviewCallback(null);
-	    if (speaker == null || speaker.initFinish){ 
-	    	speaker = new Speaker(this, "");
-		    speaker.runOnInit = new Command() {
-		    	public void runCommand() { 
-		    		mensajePrincipal();
-		    		startRecognition();
- 		    	};
-	        };
-	    }
-	    initializeSpeech();
-	    Log.i("MainActivity","onRestartLeaving");
-	}
 	
 	public static Camera getCameraInstance(){
 	    Camera camera = null;
@@ -566,6 +538,36 @@ public class CameraActivity extends Activity {
          }
      }
    }
+	
+	@Override
+	protected void onStop() {
+	    super.onStop();  // Always call the superclass method first
+
+	    //Release camera resources
+	    if(mCamera != null) mCamera.release();
+	    cleanSpeecher();
+	    if(speaker != null) speaker.destroy();
+	    cleanTimer();
+	}
+	
+	@Override
+	protected void onRestart() {
+	    super.onRestart();  // Always call the superclass method first	 
+	    
+	 // The activity is either being restarted or started for the first time
+	    // so this is where we should make sure that GPS is enabled
+	    if (speaker == null || speaker.initFinish){ 
+	    	speaker = new Speaker(this, "");
+		    speaker.runOnInit = new Command() {
+		    	public void runCommand() { 
+		    		mensajePrincipal();
+		    		startRecognition();
+ 		    	};
+	        };
+	    }
+	    initializeServices(actualModo);
+	    Log.i("MainActivity","onRestartLeaving");
+	}
 	
 //	@Override
 //	protected void onPause() {
