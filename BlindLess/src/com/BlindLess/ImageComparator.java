@@ -13,6 +13,7 @@ import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.util.Log;
 
 public class ImageComparator extends Activity{
@@ -94,7 +95,41 @@ public class ImageComparator extends Activity{
 		Imgproc.cvtColor(img_template, temp_preprocesed, Imgproc.COLOR_BGR2GRAY);
 		
 		/*APLICO MATCH TEMPLATE*/
-        int result_cols = img_preprocesed.cols() - temp_preprocesed.cols() + 1;
+        return makeMatchTemplate(outFile, img_preprocesed, temp_preprocesed);
+	}
+	
+	public Bitmap readCenter(String billeteToCheck, String templateToCheck,
+			String outFile) {
+		/*LEO IMAGEN ORIGINAL (BILLETE) Y TEMPLATE ORIGINAL*/
+		Mat img_billete = Imgcodecs.imread(billeteToCheck);
+		Mat img_template = Imgcodecs.imread(templateToCheck);
+		
+		/*CONVIERTO LA IMAGEN Y EL TEMPLATE A ESCALA DE GRISES*/
+		Mat img_preprocesed = new Mat(img_billete.size(),CvType.CV_8UC1);
+		Mat temp_preprocesed = new Mat(img_template.size(),CvType.CV_8UC1);
+		Imgproc.cvtColor(img_billete, img_preprocesed, Imgproc.COLOR_BGR2GRAY);
+		Imgproc.cvtColor(img_template, temp_preprocesed, Imgproc.COLOR_BGR2GRAY);
+		
+		/*APLICO MATCH TEMPLATE*/
+        return RotateBitmap(makeMatchTemplate(outFile, img_preprocesed, temp_preprocesed),90);
+	}
+	
+	public static Bitmap RotateBitmap(Bitmap source, float angle)
+	{
+	      Matrix matrix = new Matrix();
+	      matrix.postRotate(angle);
+	      return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+	}
+	
+// TRAIT IMAGE
+//    Imgproc.GaussianBlur(img_preprocesed, img_preprocesed, new Size(15, 15), 1, 0);
+//    Imgproc.equalizeHist(img_preprocesed, img_preprocesed);
+//    Imgproc.Canny(img_preprocesed, img_preprocesed, 100, 200);
+
+
+	private Bitmap makeMatchTemplate(String outFile, Mat img_preprocesed,
+			Mat temp_preprocesed) {
+		int result_cols = img_preprocesed.cols() - temp_preprocesed.cols() + 1;
         int result_rows = img_preprocesed.rows() - temp_preprocesed.rows() + 1;
         Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
 		Imgproc.matchTemplate(img_preprocesed, temp_preprocesed, result, Imgproc.TM_CCOEFF_NORMED);
@@ -118,10 +153,9 @@ public class ImageComparator extends Activity{
 		bmp_temp_2 = bmp_temp_2.copy(Bitmap.Config.ARGB_8888, true);
 		return bmp_temp_2;
 	}
-// TRAIT IMAGE
-//    Imgproc.GaussianBlur(img_preprocesed, img_preprocesed, new Size(15, 15), 1, 0);
-//    Imgproc.equalizeHist(img_preprocesed, img_preprocesed);
-//    Imgproc.Canny(img_preprocesed, img_preprocesed, 100, 200);
+
+
+	
 
 //templ_preprocesed = traitImage(templ_preprocesed);
 	

@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
+import android.nfc.NfcAdapter.ReaderCallback;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -190,8 +191,28 @@ public class CameraActivity extends Activity {
 			billetes.add(pictureFile.getPath());	
 			
 			//Old Method to detect supizq value from picture
-			return MatchPatternsFor("supizq", billetes);
+			if (MatchPatternsFor("supizq", billetes) > 0) return 1;
+			if (MatchPatternsFor("center", billetes) > 0) return 1;
+//			if (MatchPatternsFor("infder", billetes) > 0) return 1;
+			
+			return 1; //TODO: Tiene que devolver 0, para sacar una foto automatica, pero por ahora que devuelva 1. 
 		}
+		
+		private CommandRead readSupIzqCommand = new CommandRead() {
+			@Override
+			public Bitmap runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck,
+					String outFile) {
+				return comparator.readSupIzq(billeteToCheck, templateToCheck, outFile);
+			}
+		};
+		
+		private CommandRead readCenterCommand = new CommandRead() {
+			@Override
+			public Bitmap runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck,
+					String outFile) {
+				return comparator.readCenter(billeteToCheck, templateToCheck, outFile);
+			}
+		};
 
 		private int MatchPatternsFor(String pattern, List<String> billetes) {
 			List<String> templates = new ArrayList<String>();
@@ -203,14 +224,13 @@ public class CameraActivity extends Activity {
 			addTemplatesValue("100", pattern, templates);
 			
 			if (pattern == "supizq"){
-//				Old Method
-//					return matchSupIzq(billetes, templates);
-//				New Method
-				return matchSupIzq(billetes, templates);
+				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand);
+			}else if (pattern == "center"){
+				return matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand);
 			}
 			return 0;
 		}
-
+		
 //		private int matchSupIzq(List<String> billetes, List<String> templates) {
 //			int match_method = Imgproc.TM_CCOEFF_NORMED;
 //			return startComparisson(billetes, templates, match_method, new CommandComparisson() {
@@ -224,12 +244,12 @@ public class CameraActivity extends Activity {
 //			});
 //		}
 
-		private int matchSupIzq(List<String> billetes, List<String> templates) {
+		private int matchAndRead(List<String> billetes, List<String> templates, boolean contains, String whiteList, CommandRead readCommand) {
 			/*INICIALIZO TESSERACT*/
 			ImageComparator comparator = new ImageComparator();
 			TessBaseAPI baseApi = new TessBaseAPI();
 			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
-			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "0123456789");
+			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, whiteList);
 			
 			for (String billeteToCheck : billetes) {
 				for (String template : templates) {
@@ -237,11 +257,11 @@ public class CameraActivity extends Activity {
 					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultado" + 
 						billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1) 
 						+ "_" + template + ".jpg";
-					Bitmap supIzq = comparator.readSupIzq(billeteToCheck, templateToCheck, outFile);
+					Bitmap supIzq = readCommand.runCommand(comparator, billeteToCheck, templateToCheck, outFile);
 					baseApi.setImage(supIzq);
 					String textoLeido = baseApi.getUTF8Text();
 					Log.w("BLINDLESSTEST","Leyó: " + textoLeido);
-					String billeteReconocido = CommonMethods.esBilleteValido(textoLeido);
+					String billeteReconocido = CommonMethods.esBilleteValido(textoLeido, contains);
 					if (!billeteReconocido.equals("")) {
 						speak("Es un billete de: " + billeteReconocido + " pesos");
 						return 1;
@@ -249,7 +269,7 @@ public class CameraActivity extends Activity {
 				}
 			}
 			Log.w("BLINDLESSTEST","No se encontró patrón amigo");
-			return 1;//TODO: Tiene que devolver 0, para sacar una foto automatica, pero por ahora que devuelva 1.
+			return 0;
 		}
 
 
