@@ -299,8 +299,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 //[FIN] Comenzando con las pruebas para detectar texto.			
 
 			case R.id.ButtonComparador:	
-//				ImagePreprocessor preprocessor = new ImagePreprocessor();
-//				preprocessor.imagePreprocess();
+				ImagePreprocessor preprocessor = new ImagePreprocessor();
+				preprocessor.imagePreprocess();
 								
 				break;
 			   

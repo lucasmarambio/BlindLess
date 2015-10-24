@@ -8,8 +8,10 @@ import android.media.AudioManager;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 
-public class Speaker implements OnInitListener {
+public class Speaker implements OnInitListener, GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener {
 	 
     private TextToSpeech tts;
     private String initMsg;
@@ -87,5 +89,61 @@ public class Speaker implements OnInitListener {
 	
 	public void pause(int duration){
 	    tts.playSilence(duration, TextToSpeech.QUEUE_ADD, null);
+	}
+
+	@Override
+	public boolean onSingleTapConfirmed(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onDoubleTap(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onDoubleTapEvent(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onDown(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void onShowPress(MotionEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean onSingleTapUp(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+			float distanceY) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void onLongPress(MotionEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+			float velocityY) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }
