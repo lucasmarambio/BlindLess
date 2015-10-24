@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.opencv.imgproc.Imgproc;
-
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 import android.app.Activity;
@@ -30,12 +28,14 @@ import android.widget.FrameLayout;
 
 public class CameraActivity extends Activity {
 
-    private Camera mCamera;
+    private static final String COMANDO_SALIR = "salir";
+	private static final String COMANDO_VOLVER = "volver";
+	private static final String COMANDO_AYUDA = "ayuda";
+	private static final String COMANDO_REPETIR = "repetir";
+	private Camera mCamera;
     private CameraPreview mPreview;
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
-
-    private static final int CANT_IMAGES = 4;
     
 	//text-to-speech fields
     public Speaker speaker; 
@@ -83,7 +83,7 @@ public class CameraActivity extends Activity {
 
 	private FrameLayout initializeServices(String modo) {
 		CommandCamera onTakePicture;
-		if (modo == CommonMethods.MODO_RECONOCIMIENTO_TEXTO) {
+		if (modo.equals(CommonMethods.MODO_RECONOCIMIENTO_TEXTO)) {
 			onTakePicture = textOnTakePicture;
 		}else {
 			onTakePicture = billeteOnTakePicture;
@@ -115,7 +115,7 @@ public class CameraActivity extends Activity {
 				return -1;
 			}
 			
-			speaker.speak("Imagen capturada. Aguarde mientras se procesa.");
+			speak("Imagen capturada. Aguarde mientras se procesa.");
 			
 			try {
 				FileOutputStream fos = new FileOutputStream(pictureFile);
@@ -142,12 +142,12 @@ public class CameraActivity extends Activity {
 			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789%$@#");
 			baseApi.setVariable(TessBaseAPI.VAR_CHAR_BLACKLIST, "!^&*()_+=-[]}{;:'\"\\|~`,./<>?");
 			
-			baseApi.init("/storage/sdcard0/", "spa");
+			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
 			baseApi.setImage(bitmap);
 			String recognizedText = baseApi.getUTF8Text();
-			speaker.speak(recognizedText);
+			speak(recognizedText);
 			
-			speaker.speak("Texto leído.");
+			speak("Texto leído.");
 			return 0;
 		}
 
@@ -166,11 +166,19 @@ public class CameraActivity extends Activity {
 				return -1;
 			}
 			
+//			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+//			bitmap = Bitmap.createScaledBitmap(bitmap, 640, 480, true);
+//			
 			try {
 				FileOutputStream fos = new FileOutputStream(pictureFile);
 				fos.write(data);
 				fos.close();
-				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
+				
+//				FileOutputStream fos = new FileOutputStream(pictureFile);
+//				bitmap.compress(Bitmap.CompressFormat.PNG, 85, fos);
+//				fos.flush();
+//				fos.close();
+//				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
 			} catch (FileNotFoundException e) {
 				Log.e("TAG", "File not found: " + e.getMessage());
 			} catch (IOException e) {
@@ -179,14 +187,13 @@ public class CameraActivity extends Activity {
 			Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
 						
 			List<String> billetes = new ArrayList<String>();
-			billetes.add(pictureFile.getPath());			
+			billetes.add(pictureFile.getPath());	
 			
-			MatchPatternsFor("supizq", billetes);
-
-			return 0;
+			//Old Method to detect supizq value from picture
+			return MatchPatternsFor("supizq", billetes);
 		}
 
-		private void MatchPatternsFor(String pattern, List<String> billetes) {
+		private int MatchPatternsFor(String pattern, List<String> billetes) {
 			List<String> templates = new ArrayList<String>();
 			addTemplatesValue("2", pattern, templates);
 			addTemplatesValue("5", pattern, templates);
@@ -196,55 +203,110 @@ public class CameraActivity extends Activity {
 			addTemplatesValue("100", pattern, templates);
 			
 			if (pattern == "supizq"){
-				matchSupIzq(billetes, templates);
+//				Old Method
+//					return matchSupIzq(billetes, templates);
+//				New Method
+				return matchSupIzq(billetes, templates);
 			}
+			return 0;
+		}
+
+//		private int matchSupIzq(List<String> billetes, List<String> templates) {
+//			int match_method = Imgproc.TM_CCOEFF_NORMED;
+//			return startComparisson(billetes, templates, match_method, new CommandComparisson() {
+//				
+//				@Override
+//				public double runCommand(String billeteToCheck, String templateToCheck,
+//						String outFile, int match_method, String description) {
+//					ImageComparator comparator = new ImageComparator();
+//					return comparator.comparateSupIzq(billeteToCheck, templateToCheck, outFile, match_method, description);
+//				}
+//			});
+//		}
+
+		private int matchSupIzq(List<String> billetes, List<String> templates) {
+			/*INICIALIZO TESSERACT*/
+			ImageComparator comparator = new ImageComparator();
+			TessBaseAPI baseApi = new TessBaseAPI();
+			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
+			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "0123456789");
 			
-		}
-
-		private void matchSupIzq(List<String> billetes, List<String> templates) {
-			int match_method = Imgproc.TM_CCOEFF_NORMED;
-			startComparisson(billetes, templates, match_method, new CommandComparisson() {
-				
-				@Override
-				public double runCommand(String billeteToCheck, String templateToCheck,
-						String outFile, int match_method, String description) {
-					ImageComparator comparator = new ImageComparator();
-					return comparator.comparateSupIzq(billeteToCheck, templateToCheck, outFile, match_method, description);
-				}
-			});
-		}
-
-		private void startComparisson(List<String> billetes,
-				List<String> templates, int match_method, CommandComparisson comparisson) {
-			double maxVal;
-			String templateGanador;
 			for (String billeteToCheck : billetes) {
-				maxVal = 0.0;
-				templateGanador = "";
-				String descripcionBillete = billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1);
-				for (String template : templates) {	
-					String templateToCheck = "storage/sdcard0/Pictures/PatronesBilletes/2 Pesos/" + template + ".jpg";
-					String outFile = "storage/sdcard0/Pictures/PatronesBilletes/Resultado" + descripcionBillete + "_" + template + ".jpg";
-					double val = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, 
-							match_method, "Billete: " + descripcionBillete + ", Template: " + template);
-							
-					if (val > maxVal)
-					{
-						maxVal = val;
-						templateGanador = template;
+				for (String template : templates) {
+					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";
+					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultado" + 
+						billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1) 
+						+ "_" + template + ".jpg";
+					Bitmap supIzq = comparator.readSupIzq(billeteToCheck, templateToCheck, outFile);
+					baseApi.setImage(supIzq);
+					String textoLeido = baseApi.getUTF8Text();
+					Log.w("BLINDLESSTEST","Leyó: " + textoLeido);
+					String billeteReconocido = CommonMethods.esBilleteValido(textoLeido);
+					if (!billeteReconocido.equals("")) {
+						speak("Es un billete de: " + billeteReconocido + " pesos");
+						return 1;
 					}
 				}
-				Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
-				speaker.speak("Es un billete de: " + templateGanador.substring(0, templateGanador.indexOf('_')) + " pesos");
 			}
+			Log.w("BLINDLESSTEST","No se encontró patrón amigo");
+			return 1;//TODO: Tiene que devolver 0, para sacar una foto automatica, pero por ahora que devuelva 1.
 		}
 
+
+		//No usado por ahora, pero sirve para hacer la vieja comparación
+		/*
+		private int startComparisson(List<String> billetes,
+				List<String> templates, int match_method, CommandComparisson comparisson) {
+			double maxVal, val;
+			String templateGanador, actualTemplate, templateNumber = "";
+			for (String billeteToCheck : billetes) {
+				maxVal = 0.0;
+				val = 0.0;
+				templateGanador = "";
+				actualTemplate = templates.get(0).substring(0, templates.get(0).indexOf('_'));
+				String descripcionBillete = billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1);
+				for (String template : templates) {	
+					templateNumber = template.substring(0, template.indexOf('_'));
+					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";
+					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultado" + descripcionBillete + "_" + template + ".jpg";
+					double valAux = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, 
+							match_method, "Billete: " + descripcionBillete + ", Template: " + template);
+						
+					if (actualTemplate.equals(templateNumber)){
+						val = val + valAux;
+					}else {
+						if (val > maxVal && val > 1.5)
+						{
+							maxVal = val;
+							templateGanador = actualTemplate;
+						}
+						val = valAux;
+						actualTemplate = templateNumber;
+					}
+				}
+				
+				if (val > maxVal && val > 1.5)
+				{
+					maxVal = val;
+					templateGanador = templateNumber;
+				}
+				
+				if (maxVal > 0.0) {
+					Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
+					speak("Es un billete de: " + templateGanador + " pesos");
+					return 1;
+				}
+			}
+			
+			return 0;
+		}
+*/
+		
+		
 		private void addTemplatesValue(String value, String pattern, List<String> templates) {
-			templates.add(value + "_" + pattern + "_" + 20);
 			templates.add(value + "_" + pattern + "_" + 40);
 			templates.add(value + "_" + pattern + "_" + 60);
 			templates.add(value + "_" + pattern + "_" + 80);
-			templates.add(value + "_" + pattern + "_" + 100);
 		}
 		
 	};
@@ -323,7 +385,7 @@ public class CameraActivity extends Activity {
 	
 	private void initDictionary() {
 		
-		commandDictionary.put("ayuda", new Command() {
+		commandDictionary.put(COMANDO_AYUDA, new Command() {
             public void runCommand() { 
             	List<String> textos = new ArrayList<String>();
             	textos.add("Dijiste ayuda");
@@ -336,7 +398,7 @@ public class CameraActivity extends Activity {
             	};
         });
 		
-		commandDictionary.put("volver", new Command() {
+		commandDictionary.put(COMANDO_VOLVER, new Command() {
             public void runCommand() { 
             	speak("Dijiste volver"); 
             	setResult(Activity.RESULT_OK);
@@ -344,14 +406,14 @@ public class CameraActivity extends Activity {
             	};
         });
 		
-		commandDictionary.put("repetir", new Command() {
+		commandDictionary.put(COMANDO_REPETIR, new Command() {
             public void runCommand() { 
             	speak("Dijiste repetir");
             	startRecognition();
             	};
         });
 		
-		commandDictionary.put("salir", new Command() {
+		commandDictionary.put(COMANDO_SALIR, new Command() {
             public void runCommand() { 
             	speak("Dijiste salir"); 
             	setResult(Activity.RESULT_CANCELED);

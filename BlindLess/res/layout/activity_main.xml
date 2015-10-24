@@ -1,7 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
     android:background="#FFFFFF"
     android:baselineAligned="false"
     android:gravity="bottom"
@@ -11,29 +11,7 @@
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:contentDescription="@string/blindlessLogo"
-        android:src="@drawable/blindless" />
-
-    <Button
-        android:id="@+id/buttonCamera"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="19dp"
-        android:text="@string/iniciarCamara" />
-
-    <Button
-        android:id="@+id/ButtonComparador"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/compararImagenes" />
-
-    <Button
-        android:id="@+id/buttonBillete"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/detectarBillete" />
+        android:layout_height="match_parent"
+        android:src="@drawable/blindless_layout" />
 
 </LinearLayout>

@@ -7,7 +7,6 @@ import android.support.v4.view.GestureDetectorCompat;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,20 +17,11 @@ import java.util.TimerTask;
 import org.opencv.android.OpenCVLoader;
 
 import com.BlindLess.R;
-import com.googlecode.tesseract.android.TessBaseAPI; //Lucas: No tengo las referencias para usar esto.
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.media.ExifInterface;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-
-import org.opencv.imgproc.Imgproc;
 
 public class MainActivity extends Activity implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
 
@@ -39,9 +29,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	private static final String COMANDO_REPETIR = "repetir";
 	private static final String COMANDO_DETECTAR_BILLETE = "detectar billete";
 	private static final String COMANDO_DETECTAR_TEXTO = "detectar texto";
-	private Button buttonCamera;
-	private Button buttonBillete;
-	private Button buttonComparador;
 	
 	//text-to-speech fields
     public Speaker speaker; 
@@ -72,9 +59,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 			
 			mIsSpeaking = true;
 	
-			buttonCamera = (Button)findViewById(R.id.buttonCamera);
-			buttonBillete = (Button)findViewById(R.id.buttonBillete);
-			buttonComparador = (Button)findViewById(R.id.ButtonComparador);
 			handler = new android.os.Handler();
 			
 			if (!OpenCVLoader.initDebug()) {
@@ -93,12 +77,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 		    mDetector = new GestureDetectorCompat(this,this);
 		    mDetector.setOnDoubleTapListener(this);
 			
-			buttonCamera.setOnClickListener( new ButtonClickHandler() );
-			buttonBillete.setOnClickListener( new ButtonClickHandler() );
-			buttonComparador.setOnClickListener( new ButtonClickHandler() );
-			
-			initializeSpeech();
-		    
+			initializeSpeech();    
 		
 		} catch (Exception e) {
 			// TODO: hacer algo
@@ -168,7 +147,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	
 	//Leaving Activity methods
     private void iniciarActividadCamara(String modo) {
-		speaker.speak("Iniciando cámara");
+		speak("Iniciando cámara");
 		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
 		intent.putExtra("modo", modo);
 		startActivityForResult(intent, CAMERA_ACTIVITY);
@@ -209,6 +188,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 		commandDictionary.put(COMANDO_REPETIR, new Command() {
 			public void runCommand() { 
 				speak("Dijiste repetir");
+				mensajePrincipal();
 				startRecognition();
 	    	};
         });
@@ -226,100 +206,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         });
 	}
 
-	//To remove.. buttons!
-    public class ButtonClickHandler implements View.OnClickListener 
-    {
-    	public void onClick( View view ){
-    		//[INICIO]    		
-    	    String path_ocr;
-    	    //[FIN]
-    		
-    	    switch (view.getId()) {
-			case R.id.buttonCamera:
-//				SingletonTextToSpeech.getInstance(getApplicationContext()).sayHello("Iniciando Cámara");
-				iniciarActividadCamara(CommonMethods.MODO_RECONOCIMIENTO_TEXTO);
-				break;
-//[INICIO] Comenzando con las pruebas para detectar texto.
-			case R.id.buttonBillete:
-				path_ocr = "/storage/sdcard0/Pictures/BlindLess Pics/rodri_prueba.jpg";
-				ExifInterface exif;
-				try {
-					exif = new ExifInterface(path_ocr);
-					int exifOrientation = exif.getAttributeInt(
-					        ExifInterface.TAG_ORIENTATION,
-					        ExifInterface.ORIENTATION_NORMAL);
-
-					int rotate = 0;
-
-					switch (exifOrientation) {
-					case ExifInterface.ORIENTATION_ROTATE_90:
-					    rotate = 90;
-					    break;
-					case ExifInterface.ORIENTATION_ROTATE_180:
-					    rotate = 180;
-					    break;
-					case ExifInterface.ORIENTATION_ROTATE_270:
-					    rotate = 270;
-					    break;
-					default:
-						break;
-					}
-					
-					BitmapFactory.Options options = new BitmapFactory.Options();
-				    options.inSampleSize = 1;
-				    	
-				    Bitmap bitmap = BitmapFactory.decodeFile( path_ocr, options );
-				    //_image.setImageBitmap(bitmap);
-					
-					if (rotate != 0) {
-					    int w = bitmap.getWidth();
-					    int h = bitmap.getHeight();
-
-					    // Setting pre rotate
-					    Matrix mtx = new Matrix();
-					    mtx.preRotate(rotate);
-
-					    // Rotating Bitmap & convert to ARGB_8888, required by tess
-					    bitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, false);
-					}
-					bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-					TessBaseAPI baseApi = new TessBaseAPI();
-					// DATA_PATH = Path to the storage
-					// lang = for which the language data exists, usually "eng"
-					baseApi.init("/storage/sdcard0/", "spa");
-					baseApi.setImage(bitmap);
-					String recognizedText = baseApi.getUTF8Text();
-					baseApi.end();
-					
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				break;	
-//[FIN] Comenzando con las pruebas para detectar texto.			
-
-			case R.id.ButtonComparador:	
-				ImagePreprocessor preprocessor = new ImagePreprocessor();
-				preprocessor.imagePreprocess();
-								
-				break;
-			   
-			default:
-				break;
-			}
-    	}
-
 		
 
-    }
     
     public void mensajePrincipal(){
     	speak("mensaje principal");
 //    	List<String> textos = new ArrayList<String>();
-//    	textos.add("Pronuncie el comando detectar texto"
-//	  	  	  	+ "si desea ingresar al módulo de detección de textos");
 //    	textos.add("Pronuncie el comando detectar billete"
-//		  		+ "si desea ingresar al módulo de reconocimiento de billetes");
+//  			 + "si desea ingresar al módulo de reconocimiento de billetes");
+//    	textos.add("Pronuncie el comando detectar texto"
+//	  	  	  	 + "si desea ingresar al módulo de detección de textos");
 //    	textos.add("Pronuncie el comando salir si desea salir de la aplicación");
 //    	multipleSpeak(textos);
     }
@@ -481,7 +377,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         	Log.d(DEBUG_TAG, "onDoubleTap: Silenciar Speaker" + event.toString());       	
         } else {
         	Log.d(DEBUG_TAG, "onDoubleTap: Módulo Texto" + event.toString());
-        	commandDictionary.get(COMANDO_DETECTAR_BILLETE).runCommand();;
+        	commandDictionary.get(COMANDO_DETECTAR_TEXTO).runCommand();
         }
         
         return true;
@@ -501,7 +397,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
         else {
         	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Módulo Billete" + event.toString());
-        	commandDictionary.get(COMANDO_DETECTAR_TEXTO).runCommand();;
+        	commandDictionary.get(COMANDO_DETECTAR_BILLETE).runCommand();
         }
         return true;
     }
