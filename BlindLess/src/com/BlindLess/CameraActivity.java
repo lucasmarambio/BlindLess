@@ -85,6 +85,7 @@ public class CameraActivity extends Activity {
     }
 
 	private FrameLayout initializeServices(String modo) {
+		Log.w("RODRILOG", ">> InitializeServices Camera");
 		CommandCamera onTakePicture;
 		if (modo.equals(CommonMethods.MODO_RECONOCIMIENTO_TEXTO)) {
 			onTakePicture = textOnTakePicture;
@@ -102,6 +103,8 @@ public class CameraActivity extends Activity {
         
         //Speech Recognition
   		initializeSpeech();
+  		
+  		Log.w("RODRILOG", "<< InitializeServices Camera");
         
 		return preview;
 	}
@@ -404,6 +407,7 @@ public class CameraActivity extends Activity {
 	
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
+		Log.w("RODRILOG", ">> InitializeSpeech Camera");
 		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(CameraActivity.this);
 		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -413,12 +417,15 @@ public class CameraActivity extends Activity {
 		SpeechRecognitionListener listener = 
 				new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
 										public void runCommand() { 
-											mSpeechRecognizer.destroy();
+											Log.w("RODRILOG", ">> InitializeSpeechOnError Camera");
+											if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
 											initializeSpeech();
 											startRecognition();
+											Log.w("RODRILOG", "<< InitializeSpeechOnError Camera");
 										};
         });
 		mSpeechRecognizer.setRecognitionListener(listener);
+		Log.w("RODRILOG", "<< InitializeSpeech Camera");
 	}
 	
 	
@@ -500,26 +507,30 @@ public class CameraActivity extends Activity {
 	
     //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.
     public void repetirMensajePrincipal(int seg1, int seg2) {
+    	Log.w("RODRILOG", ">> RepetirMensajePrincipal Camera");
     	cleanTimer();
     	task = new TimerTask() {
   		   	@Override
   		   	public void run() {
   		   		handler.post(new Runnable() {
   		   			public void run() {
+  		   				Log.w("RODRILOG", ">> Repitiendopapi Camera");
   		   				cleanSpeecher();
   		   				mensajePrincipal();
   		   				initializeSpeech();
   		   				startRecognition();
+  		   				Log.w("RODRILOG", "<< Repitiendopapi Camera");
   		   			};
   		   		});
   		   	}
   		};
 		timer = new Timer();
 		timer.schedule(task,seg1,seg2);
+		Log.w("RODRILOG", "<< RepetirMensajePrincipal Camera");
     }
     
 	public void startRecognition(){
-		Log.i("Speech", "StartRecognition call");
+		Log.w("RODRILOG", ">> StartRecognition Camera");
 		if (!mIsSpeaking)
 		{
 			Log.i("Speech", "Starting listening");
@@ -528,6 +539,7 @@ public class CameraActivity extends Activity {
 	}
 	
 	public void cleanSpeecher() {
+		Log.w("RODRILOG", ">> CleanSpeecher Camera");
 	    if(mSpeechRecognizer !=null){
 	    	mSpeechRecognizer.stopListening();
 	    	mSpeechRecognizer.cancel();
@@ -537,6 +549,7 @@ public class CameraActivity extends Activity {
 	}
 	
 	public void cleanTimer() {
+		Log.w("RODRILOG", ">> cleanTimer Camera");
 		if (timer != null) {
     		timer.cancel();
     		timer.purge();
