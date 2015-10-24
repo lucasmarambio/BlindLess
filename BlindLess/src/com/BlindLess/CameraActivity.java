@@ -23,6 +23,8 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
 
@@ -522,7 +524,7 @@ public class CameraActivity extends Activity {
          }
      }
    }
-	
+
 //	@Override
 //	protected void onPause() {
 //	    super.onPause();
