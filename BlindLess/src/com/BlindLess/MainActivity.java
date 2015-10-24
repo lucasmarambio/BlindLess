@@ -194,7 +194,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         });
 		commandDictionary.put(COMANDO_SALIR, new Command() {
             public void runCommand() { 
-            	speak("Dijiste salir"); 
+            	speakWithoutRepetir("Dijiste salir"); 
             	finish(); 
         	};
         });
