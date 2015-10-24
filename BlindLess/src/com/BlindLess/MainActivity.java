@@ -99,7 +99,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	@Override
 	protected void onStop() {
 	    super.onStop();  // Always call the superclass method first
-	    Log.i("MainActivity","onStop()");
+	    Log.w("RODRILOG", "onStop");
 
 	    // Save the note's current draft, because the activity is stopping
 	    // and we want to be sure the current note progress isn't lost.
@@ -112,7 +112,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	@Override
 	protected void onRestart() {
 	    super.onRestart();  // Always call the superclass method first
-	    Log.i("MainActivity","onRestart()");
+	    Log.w("RODRILOG", "onRestart");
 	    
 	    // The activity is either being restarted or started for the first time
 	    // so this is where we should make sure that GPS is enabled
@@ -147,14 +147,17 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	
 	//Leaving Activity methods
     private void iniciarActividadCamara(String modo) {
+    	Log.w("RODRILOG", ">> iniciarActividadCamara");
     	speakWithoutRepetir("Iniciando cámara");
 		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
 		intent.putExtra("modo", modo);
 		startActivityForResult(intent, CAMERA_ACTIVITY);
+		Log.w("RODRILOG", "<< iniciarActividadCamara");
 	}
 
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
+		Log.w("RODRILOG", ">> InitializeSpeech");
 		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
 		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -163,26 +166,33 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 		SpeechRecognitionListener listener = 
 			new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
 											public void runCommand() { 
+												Log.w("RODRILOG", ">> InitiliazeSpeechOnError");
 												if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
 												initializeSpeech();
 												startRecognition();
+												Log.w("RODRILOG", "<< InitiliazeSpeechOnError");
 											};
 										 });
 		mSpeechRecognizer.setRecognitionListener(listener);
+		Log.w("RODRILOG", "<< InitializeSpeech");
 	}
 	
 	private void initDictionary() {
 		
 		commandDictionary.put(COMANDO_DETECTAR_TEXTO, new Command() {
             public void runCommand() { 
-	            	speak("Dijiste detectar texto"); 
-	            	iniciarActividadCamara(CommonMethods.MODO_RECONOCIMIENTO_TEXTO); 
-            	};
+            	Log.w("RODRILOG", ">> detectarTextoCommand");
+            	speak("Dijiste detectar texto");
+            	iniciarActividadCamara(CommonMethods.MODO_RECONOCIMIENTO_TEXTO); 
+            	Log.w("RODRILOG", "<< detectarTextoCommand");
+        	};
         });
 		commandDictionary.put(COMANDO_DETECTAR_BILLETE, new Command() {
             public void runCommand() { 
+            	Log.w("RODRILOG", ">> detectarbilletecommand");
             	speak("Dijiste detectar billete"); 
             	iniciarActividadCamara(CommonMethods.MODO_RECONOCIMIENTO_BILLETE);
+            	Log.w("RODRILOG", "<< detectarbilletecommand");
         	};
         });
 		commandDictionary.put(COMANDO_REPETIR, new Command() {
@@ -210,6 +220,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
     
     public void mensajePrincipal(){
+    	Log.w("RODRILOG", "mensajePrincipal");
     	speak("mensaje principal");
 //    	List<String> textos = new ArrayList<String>();
 //    	textos.add("Pronuncie el comando detectar billete"
@@ -222,16 +233,19 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     
   //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.
     public void repetirMensajePrincipal(int seg1, int seg2) {
+    	Log.w("RODRILOG", "RepetirMensajePrincipal");
     	cleanTimer();
     	task = new TimerTask() {
   		   	@Override
   		   	public void run() {
   		   		handler.post(new Runnable() {
   		   			public void run() {
+  		   				Log.w("RODRILOG", ">> Repitiendopapi");
   		   				cleanSpeecher();
 		   				mensajePrincipal();
 		   				initializeSpeech();
 		   				startRecognition();
+		   				Log.w("RODRILOG", "<< InitiliazeSpeechOnError");
   		   			};
   		   		});
   		   	}
@@ -241,7 +255,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     }
     
 	public void startRecognition(){
-		Log.i("Speech", "StartRecognition call");
+		Log.w("RODRILOG", "startRecognition");
 		if (!mIsSpeaking)
 		{
 			Log.i("Speech", "Starting listening");
@@ -250,6 +264,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	}
 	
 	public void cleanSpeecher() {
+		Log.w("RODRILOG", "matoSpeecher");
 	    if(mSpeechRecognizer !=null){
 	    	mSpeechRecognizer.stopListening();
 	    	mSpeechRecognizer.cancel();
@@ -259,6 +274,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	}
 	
 	public void cleanTimer() {
+		Log.w("RODRILOG", "matoTimer");
 		if (timer != null) {
     		timer.cancel();
     		timer.purge();
@@ -379,15 +395,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
     @Override
     public boolean onDoubleTap(MotionEvent event) {
-        
+    	Log.w("RODRILOG", "onDoubleTap");
         if(mIsSpeaking) {
         	Log.d(DEBUG_TAG, "onDoubleTap: Silenciar Speaker" + event.toString());       	
         } else {
         	Log.d(DEBUG_TAG, "onDoubleTap: Módulo Texto" + event.toString());
+        	cleanSpeecher();
         	commandDictionary.get(COMANDO_DETECTAR_TEXTO).runCommand();
         }
         
-        return true;
+        return false;
     }
 
     @Override
@@ -398,15 +415,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent event) {
-    	 
+    	Log.w("RODRILOG", "onSingleTapConfirmed");
         if(mIsSpeaking) {
         	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Silenciar Speaker" + event.toString());
         }
         else {
         	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Módulo Billete" + event.toString());
+        	cleanSpeecher();
         	commandDictionary.get(COMANDO_DETECTAR_BILLETE).runCommand();
         }
-        return true;
+        return false;
     }
  }
 
