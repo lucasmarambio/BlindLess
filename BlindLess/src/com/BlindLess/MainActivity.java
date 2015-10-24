@@ -147,7 +147,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	
 	//Leaving Activity methods
     private void iniciarActividadCamara(String modo) {
-		speak("Iniciando cámara");
+    	speakWithoutRepetir("Iniciando cámara");
 		Intent intent = new Intent(getApplicationContext(), CameraActivity.class );
 		intent.putExtra("modo", modo);
 		startActivityForResult(intent, CAMERA_ACTIVITY);
@@ -194,7 +194,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         });
 		commandDictionary.put(COMANDO_SALIR, new Command() {
             public void runCommand() { 
-            	speak("Dijiste salir"); 
+            	speakWithoutRepetir("Dijiste salir"); 
             	finish(); 
         	};
         });
@@ -324,6 +324,13 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 		if(speaker != null) speaker.speak(text);
 		mIsSpeaking = false;
 		repetirMensajePrincipal(CommonMethods.DECIR_MSJ_PRINCIPAL, CommonMethods.REPETIR_MSJ_PRINCIPAL);
+	}
+	
+	public void speakWithoutRepetir(String text){
+		mIsSpeaking = true;
+		cleanTimer();
+		if(speaker != null) speaker.speak(text);
+		mIsSpeaking = false;
 	}
 
     @Override 

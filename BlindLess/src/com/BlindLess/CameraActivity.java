@@ -347,7 +347,23 @@ public class CameraActivity extends Activity {
 	
 	@Override
 	protected void onRestart() {
-	    super.onRestart();  // Always call the superclass method first	    
+	    super.onRestart();  // Always call the superclass method first	 
+	    
+	 // The activity is either being restarted or started for the first time
+	    // so this is where we should make sure that GPS is enabled
+
+        mCamera.setPreviewCallback(null);
+	    if (speaker == null || speaker.initFinish){ 
+	    	speaker = new Speaker(this, "");
+		    speaker.runOnInit = new Command() {
+		    	public void runCommand() { 
+		    		mensajePrincipal();
+		    		startRecognition();
+ 		    	};
+	        };
+	    }
+	    initializeSpeech();
+	    Log.i("MainActivity","onRestartLeaving");
 	}
 	
 	public static Camera getCameraInstance(){
@@ -421,7 +437,7 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put(COMANDO_VOLVER, new Command() {
             public void runCommand() { 
-            	speak("Dijiste volver"); 
+            	speakWithoutRepetir("Dijiste volver"); 
             	setResult(Activity.RESULT_OK);
             	finish();
             	};
@@ -436,7 +452,7 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put(COMANDO_SALIR, new Command() {
             public void runCommand() { 
-            	speak("Dijiste salir"); 
+            	speakWithoutRepetir("Dijiste salir"); 
             	setResult(Activity.RESULT_CANCELED);
             	finish();
             	};
@@ -466,6 +482,13 @@ public class CameraActivity extends Activity {
 		if(speaker != null) speaker.speak(text);
 		mIsSpeaking = false;
 		repetirMensajePrincipal(CommonMethods.DECIR_MSJ_PRINCIPAL, CommonMethods.REPETIR_MSJ_PRINCIPAL);
+	}
+	
+	public void speakWithoutRepetir(String text){
+		mIsSpeaking = true;
+		cleanTimer();
+		if(speaker != null) speaker.speak(text);
+		mIsSpeaking = false;
 	}
 
     public void mensajePrincipal(){

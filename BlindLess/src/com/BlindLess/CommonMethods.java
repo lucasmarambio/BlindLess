@@ -71,7 +71,7 @@ public class CommonMethods {
 	{
 	    for(int i =0; i < items.length; i++)
 	    {
-	        if(inputString.equals(items[i]))
+	        if(inputString.toUpperCase().equals(items[i].toUpperCase()))
 	        {
 	            return items[i];
 	        }
@@ -83,7 +83,7 @@ public class CommonMethods {
 	{
 	    for(int i =0; i < items.length; i++)
 	    {
-	        if(inputString.contains(items[i]))
+	        if(inputString.toUpperCase().contains(items[i].toUpperCase()))
 	        {
 	            return items[i];
 	        }
