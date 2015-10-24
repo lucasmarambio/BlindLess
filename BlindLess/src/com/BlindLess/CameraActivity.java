@@ -192,7 +192,7 @@ public class CameraActivity extends Activity {
 			
 			//Old Method to detect supizq value from picture
 			if (MatchPatternsFor("supizq", billetes) > 0) return 1;
-			if (MatchPatternsFor("center", billetes) > 0) return 1;
+			if (MatchPatternsFor("medio", billetes) > 0) return 1;
 //			if (MatchPatternsFor("infder", billetes) > 0) return 1;
 			
 			return 1; //TODO: Tiene que devolver 0, para sacar una foto automatica, pero por ahora que devuelva 1. 
@@ -225,7 +225,7 @@ public class CameraActivity extends Activity {
 			
 			if (pattern == "supizq"){
 				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand);
-			}else if (pattern == "center"){
+			}else if (pattern == "medio"){
 				return matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand);
 			}
 			return 0;
@@ -258,6 +258,7 @@ public class CameraActivity extends Activity {
 						billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1) 
 						+ "_" + template + ".jpg";
 					Bitmap supIzq = readCommand.runCommand(comparator, billeteToCheck, templateToCheck, outFile);
+					if (supIzq == null) continue;
 					baseApi.setImage(supIzq);
 					String textoLeido = baseApi.getUTF8Text();
 					Log.w("BLINDLESSTEST","Leyó: " + textoLeido);
@@ -368,7 +369,7 @@ public class CameraActivity extends Activity {
 	        //Choose another supported mode
 	    }
 //	    camera.setDisplayOrientation(90);
-//	    camera.setParameters(params);
+	    camera.setParameters(params);
 	    
 	    return camera; // returns null if camera is unavailable
 	}

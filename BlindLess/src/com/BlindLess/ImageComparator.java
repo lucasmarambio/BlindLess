@@ -95,7 +95,7 @@ public class ImageComparator extends Activity{
 		Imgproc.cvtColor(img_template, temp_preprocesed, Imgproc.COLOR_BGR2GRAY);
 		
 		/*APLICO MATCH TEMPLATE*/
-        return makeMatchTemplate(outFile, img_preprocesed, temp_preprocesed);
+        return makeMatchTemplate(outFile, img_preprocesed, temp_preprocesed, 0.6);
 	}
 	
 	public Bitmap readCenter(String billeteToCheck, String templateToCheck,
@@ -111,11 +111,12 @@ public class ImageComparator extends Activity{
 		Imgproc.cvtColor(img_template, temp_preprocesed, Imgproc.COLOR_BGR2GRAY);
 		
 		/*APLICO MATCH TEMPLATE*/
-        return RotateBitmap(makeMatchTemplate(outFile, img_preprocesed, temp_preprocesed),90);
+        return RotateBitmap(makeMatchTemplate(outFile, img_preprocesed, temp_preprocesed, 0.2),90);
 	}
 	
 	public static Bitmap RotateBitmap(Bitmap source, float angle)
 	{
+		if (source == null) return null;
 	      Matrix matrix = new Matrix();
 	      matrix.postRotate(angle);
 	      return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
@@ -128,7 +129,7 @@ public class ImageComparator extends Activity{
 
 
 	private Bitmap makeMatchTemplate(String outFile, Mat img_preprocesed,
-			Mat temp_preprocesed) {
+			Mat temp_preprocesed, double minValSupported) {
 		int result_cols = img_preprocesed.cols() - temp_preprocesed.cols() + 1;
         int result_rows = img_preprocesed.rows() - temp_preprocesed.rows() + 1;
         Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
@@ -137,6 +138,9 @@ public class ImageComparator extends Activity{
         /*LOCALIZO EL BEST MATCH CON minMaxLoc*/
         MinMaxLocResult mmr = Core.minMaxLoc(result);
         Point matchLoc = mmr.maxLoc;
+        
+        Log.w("BLINDLESSTEST","El maxLoc: " + mmr.maxVal);
+        if (mmr.maxVal < minValSupported) return null;
         
 //        Descomentar para Ver que fue lo que encontró
 //        Imgproc.rectangle(img_preprocesed, matchLoc, new Point(matchLoc.x + temp_preprocesed.cols(),
