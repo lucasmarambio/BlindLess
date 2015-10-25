@@ -26,20 +26,21 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
     public static final int MEDIA_TYPE_VIDEO = 2;
     private List<Camera.Size> mSupportedPreviewSizes;
     private Camera.Size mPreviewSize;
+    SurfaceView mSurfaceView;
     
 	private boolean cameraConfigured = false;
 	
 	public CameraPreview(Context context, SurfaceView surfaceView, Camera camera, CommandCamera callbackOnTakePic) {
         super(context);
+        mSurfaceView = surfaceView;
         mCamera = camera;
         onTakePic = callbackOnTakePic;
         mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
-
-        // Install a SurfaceHolder.Callback so we get notified when the
-        // underlying surface is created and destroyed.
-        mHolder = surfaceView.getHolder();
+        
+        
+//        addView(mSurfaceView);
+        mHolder = mSurfaceView.getHolder();
         mHolder.addCallback(this);
-        // deprecated setting, but required on Android versions prior to 3.0
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         
         this.setOnTouchListener(new View.OnTouchListener() {
@@ -53,7 +54,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 				return false;
 			}		
 
-		});   
+		}); 
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
@@ -134,9 +135,11 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 
         // start preview with new settings
         try {
-	        	initPreview(w, h);
-	            mCamera.setPreviewDisplay(mHolder);
-	            mCamera.startPreview();
+        	Camera.Parameters parameters = mCamera.getParameters();
+			parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+			requestLayout();
+        	mCamera.setParameters(parameters);
+        	mCamera.startPreview();
 //            mCamera.takePicture(null, null, mPictureCallback);
 
         } catch (Exception e){
@@ -144,66 +147,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
         }
     }
     
-    private void initPreview(int width, int height) {
-        if (mCamera != null && mHolder.getSurface() != null) {
-
-            if (!cameraConfigured) {
-                Camera.Parameters parameters = mCamera.getParameters();
-                Camera.Size size = getBestPreviewSize(0, width, height, parameters, 0);
-
-                if (size != null) {
-                    parameters.setPreviewSize(size.width, size.height);
-                    mCamera.setParameters(parameters);
-                    cameraConfigured = true;
-                }
-            }
-
-            try {
-            	mCamera.setPreviewDisplay(mHolder);
-//            	mCamera.setDisplayOrientation(180);
-
-            } catch (Throwable t) {
-                Log.e("TAG", "Exception in setPreviewDisplay()", t);
-//                Toast.makeText(MainActivity.instance, t.getMessage(), Toast.LENGTH_LONG).show();
-            }
-
-        }
-    }
-    
-    private Camera.Size getBestPreviewSize(int displayOrientation,
-            int width,
-            int height,
-            Camera.Parameters parameters,
-            double closeEnough) {
-    	double targetRatio=(double)width / height;
-        Camera.Size optimalSize=null;
-        double minDiff=Double.MAX_VALUE;
-
-        if (displayOrientation == 90 || displayOrientation == 270) {
-          targetRatio=(double)height / width;
-        }
-
-        List<Size> sizes=parameters.getSupportedPreviewSizes();
-
-        Collections.sort(sizes,
-                         Collections.reverseOrder(new SizeComparator()));
-
-        for (Size size : sizes) {
-          double ratio=(double)size.width / size.height;
-
-          if (Math.abs(ratio - targetRatio) < minDiff) {
-            optimalSize=size;
-            minDiff=Math.abs(ratio - targetRatio);
-          }
-
-          if (minDiff < closeEnough) {
-            break;
-          }
-        }
-
-        return(optimalSize);	
-    }
-    
+     
 	/** Create a File for saving an image or video */
     
     Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {

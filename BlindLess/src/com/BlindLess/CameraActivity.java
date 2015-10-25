@@ -14,6 +14,7 @@ import java.util.TimerTask;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -41,6 +42,8 @@ public class CameraActivity extends Activity {
 	private static final String COMANDO_REPETIR = "repetir";
 	private Camera mCamera;
     private CameraPreview mPreview;
+	private Activity act;
+	private Context ctx;
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
     
@@ -64,6 +67,10 @@ public class CameraActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         
     	super.onCreate(savedInstanceState);
+		ctx = this;
+		act = this;
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_camera);
         handler = new android.os.Handler();
         
