@@ -13,7 +13,7 @@ interface CommandCamera {
 }
 
 interface CommandComparisson {
-	double runCommand(String billeteToCheck, String templateToCheck, String outFile, int match_method, String string);
+	double runCommand(String billeteToCheck, String templateToCheck, String outFile, String templateToWrite, int match_method, String string);
 }
 
 interface CommandRead {
