@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
+import android.nfc.NfcAdapter.ReaderCallback;
 import android.os.Bundle;
 import android.view.SurfaceView;
 import android.view.Window;
@@ -27,6 +28,8 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
 
@@ -50,6 +53,7 @@ public class CameraActivity extends Activity {
     private Intent mSpeechRecognizerIntent;
     private boolean mIsSpeaking;  
     private Map<String, Command> commandDictionary = new HashMap<String, Command>();
+    private String actualModo;
     
     //Timer
     private Timer timer;
@@ -72,7 +76,8 @@ public class CameraActivity extends Activity {
 	    startActivityForResult(check, TTS_CHECK);
 	    
 	    Bundle bundle = getIntent().getExtras();
-	    initializeServices(bundle.getString("modo"));
+	    actualModo = bundle.getString("modo");
+	    initializeServices(actualModo);
         
 //		preview.setOnTouchListener(new View.OnTouchListener() {
 //			
@@ -86,6 +91,7 @@ public class CameraActivity extends Activity {
     }
 
 	private FrameLayout initializeServices(String modo) {
+		Log.w("RODRILOG", ">> InitializeServices Camera");
 		CommandCamera onTakePicture;
 		if (modo.equals(CommonMethods.MODO_RECONOCIMIENTO_TEXTO)) {
 			onTakePicture = textOnTakePicture;
@@ -104,6 +110,8 @@ public class CameraActivity extends Activity {
         
         //Speech Recognition
   		initializeSpeech();
+  		
+  		Log.w("RODRILOG", "<< InitializeServices Camera");
         
 		return ((FrameLayout) findViewById(R.id.layout));
 	}
@@ -195,8 +203,28 @@ public class CameraActivity extends Activity {
 			billetes.add(pictureFile.getPath());	
 			
 			//Old Method to detect supizq value from picture
-			return MatchPatternsFor("supizq", billetes);
+			if (MatchPatternsFor("supizq", billetes) > 0) return 1;
+			if (MatchPatternsFor("medio", billetes) > 0) return 1;
+//			if (MatchPatternsFor("infder", billetes) > 0) return 1;
+			
+			return 1; //TODO: Tiene que devolver 0, para sacar una foto automatica, pero por ahora que devuelva 1. 
 		}
+		
+		private CommandRead readSupIzqCommand = new CommandRead() {
+			@Override
+			public Bitmap runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck,
+					String outFile) {
+				return comparator.readSupIzq(billeteToCheck, templateToCheck, outFile);
+			}
+		};
+		
+		private CommandRead readCenterCommand = new CommandRead() {
+			@Override
+			public Bitmap runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck,
+					String outFile) {
+				return comparator.readCenter(billeteToCheck, templateToCheck, outFile);
+			}
+		};
 
 		private int MatchPatternsFor(String pattern, List<String> billetes) {
 			List<String> templates = new ArrayList<String>();
@@ -208,14 +236,13 @@ public class CameraActivity extends Activity {
 			addTemplatesValue("100", pattern, templates);
 			
 			if (pattern == "supizq"){
-//				Old Method
-//					return matchSupIzq(billetes, templates);
-//				New Method
-				return matchSupIzq(billetes, templates);
+				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand);
+			}else if (pattern == "medio"){
+				return matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand);
 			}
 			return 0;
 		}
-
+		
 //		private int matchSupIzq(List<String> billetes, List<String> templates) {
 //			int match_method = Imgproc.TM_CCOEFF_NORMED;
 //			return startComparisson(billetes, templates, match_method, new CommandComparisson() {
@@ -229,12 +256,12 @@ public class CameraActivity extends Activity {
 //			});
 //		}
 
-		private int matchSupIzq(List<String> billetes, List<String> templates) {
+		private int matchAndRead(List<String> billetes, List<String> templates, boolean contains, String whiteList, CommandRead readCommand) {
 			/*INICIALIZO TESSERACT*/
 			ImageComparator comparator = new ImageComparator();
 			TessBaseAPI baseApi = new TessBaseAPI();
 			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
-			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "0123456789");
+			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, whiteList);
 			
 			for (String billeteToCheck : billetes) {
 				for (String template : templates) {
@@ -242,11 +269,12 @@ public class CameraActivity extends Activity {
 					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultado" + 
 						billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1) 
 						+ "_" + template + ".jpg";
-					Bitmap supIzq = comparator.readSupIzq(billeteToCheck, templateToCheck, outFile);
+					Bitmap supIzq = readCommand.runCommand(comparator, billeteToCheck, templateToCheck, outFile);
+					if (supIzq == null) continue;
 					baseApi.setImage(supIzq);
 					String textoLeido = baseApi.getUTF8Text();
 					Log.w("BLINDLESSTEST","Leyó: " + textoLeido);
-					String billeteReconocido = CommonMethods.esBilleteValido(textoLeido);
+					String billeteReconocido = CommonMethods.esBilleteValido(textoLeido, contains);
 					if (!billeteReconocido.equals("")) {
 						speak("Es un billete de: " + billeteReconocido + " pesos");
 						return 1;
@@ -254,7 +282,7 @@ public class CameraActivity extends Activity {
 				}
 			}
 			Log.w("BLINDLESSTEST","No se encontró patrón amigo");
-			return 1;//TODO: Tiene que devolver 0, para sacar una foto automatica, pero por ahora que devuelva 1.
+			return 0;
 		}
 
 
@@ -318,21 +346,7 @@ public class CameraActivity extends Activity {
 	
 
     
-	@Override
-	protected void onStop() {
-	    super.onStop();  // Always call the superclass method first
 
-	    //Release camera resources
-	    if(mCamera != null) mCamera.release();
-	    cleanSpeecher();
-	    if(speaker != null) speaker.destroy();
-	    cleanTimer();
-	}
-	
-	@Override
-	protected void onRestart() {
-	    super.onRestart();  // Always call the superclass method first	    
-	}
 	
 	public static Camera getCameraInstance(){
 	    Camera camera = null;
@@ -353,7 +367,7 @@ public class CameraActivity extends Activity {
 	        //Choose another supported mode
 	    }
 //	    camera.setDisplayOrientation(90);
-//	    camera.setParameters(params);
+	    camera.setParameters(params);
 	    
 	    return camera; // returns null if camera is unavailable
 	}
@@ -370,6 +384,7 @@ public class CameraActivity extends Activity {
 	
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
+		Log.w("RODRILOG", ">> InitializeSpeech Camera");
 		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(CameraActivity.this);
 		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -379,12 +394,15 @@ public class CameraActivity extends Activity {
 		SpeechRecognitionListener listener = 
 				new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
 										public void runCommand() { 
-											mSpeechRecognizer.destroy();
+											Log.w("RODRILOG", ">> InitializeSpeechOnError Camera");
+											if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
 											initializeSpeech();
 											startRecognition();
+											Log.w("RODRILOG", "<< InitializeSpeechOnError Camera");
 										};
         });
 		mSpeechRecognizer.setRecognitionListener(listener);
+		Log.w("RODRILOG", "<< InitializeSpeech Camera");
 	}
 	
 	
@@ -405,7 +423,7 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put(COMANDO_VOLVER, new Command() {
             public void runCommand() { 
-            	speak("Dijiste volver"); 
+            	speakWithoutRepetir("Dijiste volver"); 
             	setResult(Activity.RESULT_OK);
             	finish();
             	};
@@ -420,7 +438,7 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put(COMANDO_SALIR, new Command() {
             public void runCommand() { 
-            	speak("Dijiste salir"); 
+            	speakWithoutRepetir("Dijiste salir"); 
             	setResult(Activity.RESULT_CANCELED);
             	finish();
             	};
@@ -451,6 +469,13 @@ public class CameraActivity extends Activity {
 		mIsSpeaking = false;
 		repetirMensajePrincipal(CommonMethods.DECIR_MSJ_PRINCIPAL, CommonMethods.REPETIR_MSJ_PRINCIPAL);
 	}
+	
+	public void speakWithoutRepetir(String text){
+		mIsSpeaking = true;
+		cleanTimer();
+		if(speaker != null) speaker.speak(text);
+		mIsSpeaking = false;
+	}
 
     public void mensajePrincipal(){
 		speak("Pronuncie el comando ayuda para iniciar la guía de"
@@ -459,26 +484,30 @@ public class CameraActivity extends Activity {
 	
     //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.
     public void repetirMensajePrincipal(int seg1, int seg2) {
+    	Log.w("RODRILOG", ">> RepetirMensajePrincipal Camera");
     	cleanTimer();
     	task = new TimerTask() {
   		   	@Override
   		   	public void run() {
   		   		handler.post(new Runnable() {
   		   			public void run() {
+  		   				Log.w("RODRILOG", ">> Repitiendopapi Camera");
   		   				cleanSpeecher();
   		   				mensajePrincipal();
   		   				initializeSpeech();
   		   				startRecognition();
+  		   				Log.w("RODRILOG", "<< Repitiendopapi Camera");
   		   			};
   		   		});
   		   	}
   		};
 		timer = new Timer();
 		timer.schedule(task,seg1,seg2);
+		Log.w("RODRILOG", "<< RepetirMensajePrincipal Camera");
     }
     
 	public void startRecognition(){
-		Log.i("Speech", "StartRecognition call");
+		Log.w("RODRILOG", ">> StartRecognition Camera");
 		if (!mIsSpeaking)
 		{
 			Log.i("Speech", "Starting listening");
@@ -487,6 +516,7 @@ public class CameraActivity extends Activity {
 	}
 	
 	public void cleanSpeecher() {
+		Log.w("RODRILOG", ">> CleanSpeecher Camera");
 	    if(mSpeechRecognizer !=null){
 	    	mSpeechRecognizer.stopListening();
 	    	mSpeechRecognizer.cancel();
@@ -496,6 +526,7 @@ public class CameraActivity extends Activity {
 	}
 	
 	public void cleanTimer() {
+		Log.w("RODRILOG", ">> cleanTimer Camera");
 		if (timer != null) {
     		timer.cancel();
     		timer.purge();
@@ -527,6 +558,36 @@ public class CameraActivity extends Activity {
          }
      }
    }
+
+	@Override
+	protected void onStop() {
+	    super.onStop();  // Always call the superclass method first
+
+	    //Release camera resources
+	    if(mCamera != null) mCamera.release();
+	    cleanSpeecher();
+	    if(speaker != null) speaker.destroy();
+	    cleanTimer();
+	}
+	
+	@Override
+	protected void onRestart() {
+	    super.onRestart();  // Always call the superclass method first	 
+	    
+	 // The activity is either being restarted or started for the first time
+	    // so this is where we should make sure that GPS is enabled
+	    if (speaker == null || speaker.initFinish){ 
+	    	speaker = new Speaker(this, "");
+		    speaker.runOnInit = new Command() {
+		    	public void runCommand() { 
+		    		mensajePrincipal();
+		    		startRecognition();
+ 		    	};
+	        };
+	    }
+	    initializeServices(actualModo);
+	    Log.i("MainActivity","onRestartLeaving");
+	}
 	
 	@Override
 	protected void onPause() {

@@ -3,6 +3,7 @@ package com.BlindLess;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+
 import android.os.Environment;
 import android.util.Log;
 
@@ -10,12 +11,16 @@ public class CommonMethods {
 	
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
-    public static final int DECIR_MSJ_PRINCIPAL = 20000;
-    public static final int REPETIR_MSJ_PRINCIPAL = 20000;
+    public static final int DECIR_MSJ_PRINCIPAL = 30000;
+    public static final int REPETIR_MSJ_PRINCIPAL = 30000;
 	public static final String MODO_RECONOCIMIENTO_TEXTO = "Texto";
 	public static final String MODO_RECONOCIMIENTO_BILLETE = "Billete";
-	private static String[] billetesReconocidos = {
-		"2", "5", "10","20","50","100",
+	public static final String NUMERO_BILLETE = "0125";
+	public static final String LETRAS_BILLETE = "acdeinostuvzACDEINOSTUVZ";
+	private static String[] numeroBilletesReconocidos = {
+		"2", "5", "10","20","50","100"
+		};
+	private static String[] textoBilletesReconocidos = {
 		"dos","cinco","diez","veinte","cincuenta","cien"
 		};
 	
@@ -54,15 +59,31 @@ public class CommonMethods {
 		return mediaFile;
 	}
 	
-	public static String esBilleteValido(String texto){
-		return stringContainsItemFromList(texto, billetesReconocidos);
+	public static String esBilleteValido(String texto, boolean contains){
+		if (contains){
+			return stringContainsItemFromList(texto, textoBilletesReconocidos);
+		}else {
+			return stringEqualsItemFromList(texto, numeroBilletesReconocidos);
+		}
+	}
+	
+	public static String stringEqualsItemFromList(String inputString, String[] items)
+	{
+	    for(int i =0; i < items.length; i++)
+	    {
+	        if(inputString.toUpperCase().equals(items[i].toUpperCase()))
+	        {
+	            return items[i];
+	        }
+	    }
+	    return "";
 	}
 	
 	public static String stringContainsItemFromList(String inputString, String[] items)
 	{
 	    for(int i =0; i < items.length; i++)
 	    {
-	        if(inputString.contains(items[i]))
+	        if(inputString.toUpperCase().contains(items[i].toUpperCase()))
 	        {
 	            return items[i];
 	        }
