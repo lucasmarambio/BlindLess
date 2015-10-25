@@ -14,8 +14,9 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 
-public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
+public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 	
     private SurfaceHolder mHolder;
     private Camera mCamera;
@@ -28,7 +29,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     
 	private boolean cameraConfigured = false;
 	
-	public CameraPreview(Context context, Camera camera, CommandCamera callbackOnTakePic) {
+	public CameraPreview(Context context, SurfaceView surfaceView, Camera camera, CommandCamera callbackOnTakePic) {
         super(context);
         mCamera = camera;
         onTakePic = callbackOnTakePic;
@@ -36,7 +37,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // Install a SurfaceHolder.Callback so we get notified when the
         // underlying surface is created and destroyed.
-        mHolder = getHolder();
+        mHolder = surfaceView.getHolder();
         mHolder.addCallback(this);
         // deprecated setting, but required on Android versions prior to 3.0
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -256,5 +257,52 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 	    return(0);
 	  }
 }
+
+    public void setCamera(Camera camera) {
+    	mCamera = camera;
+    	if (mCamera != null) {
+    		mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
+    		requestLayout();
+
+    		// get Camera parameters
+    		Camera.Parameters params = mCamera.getParameters();
+
+    		List<String> focusModes = params.getSupportedFocusModes();
+    		if (focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+    			// set the focus mode
+    			params.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+    			// set Camera parameters
+    			mCamera.setParameters(params);
+    		}
+    	}
+    }
+    
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        if (changed && getChildCount() > 0) {
+            final View child = getChildAt(0);
+
+            final int width = r - l;
+            final int height = b - t;
+
+            int previewWidth = width;
+            int previewHeight = height;
+            if (mPreviewSize != null) {
+                previewWidth = mPreviewSize.width;
+                previewHeight = mPreviewSize.height;
+            }
+
+            // Center the child SurfaceView within the parent.
+            if (width * previewHeight > height * previewWidth) {
+                final int scaledChildWidth = previewWidth * height / previewHeight;
+                child.layout((width - scaledChildWidth) / 2, 0,
+                        (width + scaledChildWidth) / 2, height);
+            } else {
+                final int scaledChildHeight = previewHeight * width / previewWidth;
+                child.layout(0, (height - scaledChildHeight) / 2,
+                        width, (height + scaledChildHeight) / 2);
+            }
+        }
+    }
    
 }

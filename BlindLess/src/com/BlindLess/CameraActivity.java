@@ -22,6 +22,10 @@ import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.nfc.NfcAdapter.ReaderCallback;
 import android.os.Bundle;
+import android.view.SurfaceView;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.WindowManager.LayoutParams;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
@@ -101,16 +105,17 @@ public class CameraActivity extends Activity {
 		if (mCamera == null) mCamera = getCameraInstance();
 
         // Create our Preview view and set it as the content of our activity.
-		if (mPreview == null) mPreview = new CameraPreview(this, mCamera, onTakePicture);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(mPreview);
+		if (mPreview == null) mPreview = new CameraPreview(this, (SurfaceView)findViewById(R.id.camera_preview), mCamera, onTakePicture);
+		mPreview.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+		((FrameLayout) findViewById(R.id.layout)).addView(mPreview);
+		mPreview.setKeepScreenOn(true);
         
         //Speech Recognition
   		initializeSpeech();
   		
   		Log.w("RODRILOG", "<< InitializeServices Camera");
         
-		return preview;
+		return ((FrameLayout) findViewById(R.id.layout));
 	}
 	
 	private CommandCamera textOnTakePicture = new CommandCamera(){
@@ -604,37 +609,30 @@ public class CameraActivity extends Activity {
 	    Log.i("MainActivity","onRestartLeaving");
 	}
 	
-//	@Override
-//	protected void onPause() {
-//	    super.onPause();
-//	    try
-//	    {    
-//	        // release the camera immediately on pause event   
-//	        //releaseCamera();
-//	         mCamera.stopPreview(); 
-//	         mCamera.setPreviewCallback(null);
-//	         mPreview.getHolder().removeCallback(mPreview);
-//	         mCamera.release();
-//	         mCamera = null;
-//
-//	    }
-//	    catch(Exception e)
-//	    {
-//	        e.printStackTrace();
-//	    }
-//	}
-//	
-//	@Override
-//	protected void onResume()
-//	{
-//	    super.onResume();
-//	    try
-//	    {
-//	        mCamera.setPreviewCallback(null);
-//	        initializeServices();
-//	    } catch (Exception e){
-////	        Log.d(TAG, "Error starting camera preview: " + e.getMessage());
-//	    }
-//	}   
+	@Override
+	protected void onPause() {
+//		if(mCamera != null) {
+//			mCamera.stopPreview();
+//			mPreview.setCamera(null);
+//			mCamera.release();
+//			mCamera = null;
+//		}
+		super.onPause();
+	}	
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+//		int numCams = Camera.getNumberOfCameras();
+//		if(numCams > 0){
+//			try{
+//				mCamera = Camera.open(0);
+//				mCamera.startPreview();
+//				mPreview.setCamera(mCamera);
+//			} catch (RuntimeException ex){
+//			}
+//		}
+	} 
+	
 	
 }
