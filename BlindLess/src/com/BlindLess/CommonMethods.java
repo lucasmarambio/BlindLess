@@ -17,6 +17,9 @@ public class CommonMethods {
 	public static final String MODO_RECONOCIMIENTO_BILLETE = "Billete";
 	public static final String NUMERO_BILLETE = "0125";
 	public static final String LETRAS_BILLETE = "acdeinostuvzACDEINOSTUVZ";
+    public static final String MEDIO_TEXT = "medio";
+	public static final String SUPIZQ_TEXT = "supizq";
+	public static final String SUPIZQ_VAL = "supizq";
 	private static String[] numeroBilletesReconocidos = {
 		"2", "5", "10","20","50","100"
 		};

@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.opencv.imgproc.Imgproc;
+
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 import android.app.Activity;
@@ -31,7 +33,7 @@ import android.widget.FrameLayout;
 
 public class CameraActivity extends Activity {
 
-    private static final String COMANDO_SALIR = "salir";
+	private static final String COMANDO_SALIR = "salir";
 	private static final String COMANDO_VOLVER = "volver";
 	private static final String COMANDO_AYUDA = "ayuda";
 	private static final String COMANDO_REPETIR = "repetir";
@@ -198,8 +200,9 @@ public class CameraActivity extends Activity {
 			billetes.add(pictureFile.getPath());	
 			
 			//Old Method to detect supizq value from picture
-			if (MatchPatternsFor("supizq", billetes) > 0) return 1;
-			if (MatchPatternsFor("medio", billetes) > 0) return 1;
+			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return 1;
+//			if (MatchPatternsFor(CommonMethods.SUPIZQ_TEXT, billetes) > 0) return 1;
+//			if (MatchPatternsFor(CommonMethods.MEDIO_TEXT, billetes) > 0) return 1;
 //			if (MatchPatternsFor("infder", billetes) > 0) return 1;
 			
 			return 1; //TODO: Tiene que devolver 0, para sacar una foto automatica, pero por ahora que devuelva 1. 
@@ -230,26 +233,30 @@ public class CameraActivity extends Activity {
 			addTemplatesValue("50", pattern, templates);
 			addTemplatesValue("100", pattern, templates);
 			
-			if (pattern == "supizq"){
-				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand);
-			}else if (pattern == "medio"){
-				return matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand);
-			}
+//			if (pattern.equals(CommonMethods.SUPIZQ_TEXT)){
+//				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand);
+//			}else 
+				if (pattern.equals(CommonMethods.SUPIZQ_VAL)){
+					return matchSupIzq(billetes, templates, true);
+				}
+//			}else if (pattern.equals(CommonMethods.MEDIO_TEXT)){
+//				return matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand);
+//			}
 			return 0;
 		}
 		
-//		private int matchSupIzq(List<String> billetes, List<String> templates) {
-//			int match_method = Imgproc.TM_CCOEFF_NORMED;
-//			return startComparisson(billetes, templates, match_method, new CommandComparisson() {
-//				
-//				@Override
-//				public double runCommand(String billeteToCheck, String templateToCheck,
-//						String outFile, int match_method, String description) {
-//					ImageComparator comparator = new ImageComparator();
-//					return comparator.comparateSupIzq(billeteToCheck, templateToCheck, outFile, match_method, description);
-//				}
-//			});
-//		}
+		private int matchSupIzq(List<String> billetes, List<String> templates, boolean maxFound) {
+			int match_method = Imgproc.TM_CCOEFF_NORMED;
+			return startComparisson(billetes, templates, match_method, maxFound, new CommandComparisson() {
+				
+				@Override
+				public double runCommand(String billeteToCheck, String templateToCheck,
+						String outFile, String templateToWrite, int match_method, String description) {
+					ImageComparator comparator = new ImageComparator();
+					return comparator.comparateSupIzq(billeteToCheck, templateToCheck, outFile, templateToWrite, match_method, description);
+				}
+			});
+		}
 
 		private int matchAndRead(List<String> billetes, List<String> templates, boolean contains, String whiteList, CommandRead readCommand) {
 			/*INICIALIZO TESSERACT*/
@@ -282,9 +289,9 @@ public class CameraActivity extends Activity {
 
 
 		//No usado por ahora, pero sirve para hacer la vieja comparación
-		/*
+
 		private int startComparisson(List<String> billetes,
-				List<String> templates, int match_method, CommandComparisson comparisson) {
+				List<String> templates, int match_method, boolean maxFound, CommandComparisson comparisson) {
 			double maxVal, val;
 			String templateGanador, actualTemplate, templateNumber = "";
 			for (String billeteToCheck : billetes) {
@@ -292,31 +299,46 @@ public class CameraActivity extends Activity {
 				val = 0.0;
 				templateGanador = "";
 				actualTemplate = templates.get(0).substring(0, templates.get(0).indexOf('_'));
-				String descripcionBillete = billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1);
+				String descripcionBillete = billeteToCheck.substring(billeteToCheck.length() - 12, billeteToCheck.length() - 1);
 				for (String template : templates) {	
 					templateNumber = template.substring(0, template.indexOf('_'));
 					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";
-					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultado" + descripcionBillete + "_" + template + ".jpg";
-					double valAux = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, 
+					String templateToWrite = "storage/sdcard0/BlindLess/Templates/" + template + "_grey.jpg";
+					String outFile = "storage/sdcard0/BlindLess/Resultados/" + descripcionBillete + "_" + template + ".jpg";
+					double valAux = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, templateToWrite, 
 							match_method, "Billete: " + descripcionBillete + ", Template: " + template);
 						
-					if (actualTemplate.equals(templateNumber)){
-						val = val + valAux;
-					}else {
-						if (val > maxVal && val > 1.5)
-						{
-							maxVal = val;
-							templateGanador = actualTemplate;
+					if (maxFound){
+						//Busca el valor más alto de match
+						if (valAux > val){
+							val = valAux;
+							templateGanador = templateNumber;
 						}
-						val = valAux;
-						actualTemplate = templateNumber;
+					}else {
+						//Acumula el valor para ver de entre todos cual es el mejor
+						if (actualTemplate.equals(templateNumber)){
+							val = val + valAux;
+						}else {
+							if (val > maxVal && val > 1.5)
+							{
+								maxVal = val;
+								templateGanador = actualTemplate;
+							}
+							val = valAux;
+							actualTemplate = templateNumber;
+						}
 					}
+					
 				}
-				
-				if (val > maxVal && val > 1.5)
-				{
+				if (maxFound){
 					maxVal = val;
-					templateGanador = templateNumber;
+				}else{
+					//Acumula el valor para ver de entre todos cual es el mejor
+					if (val > maxVal && val > 1.5)
+					{
+						maxVal = val;
+						templateGanador = templateNumber;
+					}
 				}
 				
 				if (maxVal > 0.0) {
@@ -328,8 +350,6 @@ public class CameraActivity extends Activity {
 			
 			return 0;
 		}
-*/
-		
 		
 		private void addTemplatesValue(String value, String pattern, List<String> templates) {
 			templates.add(value + "_" + pattern + "_" + 40);

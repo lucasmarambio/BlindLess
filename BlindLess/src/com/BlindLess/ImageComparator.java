@@ -62,7 +62,7 @@ public class ImageComparator extends Activity{
 	}
 
 
-	public double comparateSupIzq(String inFile, String templateFile, String outFile, int match_method, String description) {
+	public double comparateSupIzq(String inFile, String templateFile, String outFile, String templateToWrite, int match_method, String description) {
 		try {
 			/*LEO LA IMAGEN Y EL TEMPLATE*/
 			Mat img_preprocesed = Imgcodecs.imread(inFile);
@@ -74,6 +74,7 @@ public class ImageComparator extends Activity{
 		    
 		    //Preprocess template to grayScale
 			Imgproc.cvtColor(templ_preprocesed, templ_preprocesed, Imgproc.COLOR_BGR2GRAY);
+//			Imgcodecs.imwrite(templateToWrite, templ_preprocesed);
 			
 			return comparate(img_preprocesed, templ_preprocesed, match_method, outFile, description);
 		} catch (Exception e) {
