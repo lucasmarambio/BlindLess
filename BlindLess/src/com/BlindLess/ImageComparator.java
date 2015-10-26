@@ -1,11 +1,17 @@
 package com.BlindLess;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
+
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -223,19 +229,68 @@ public class ImageComparator extends Activity{
 	
 	public String textPreprocess(String path_texto){
 		
-		Mat txt_original = Imgcodecs.imread(path_texto);
+		Mat img_original = Imgcodecs.imread(path_texto);
 		
 		/*CONVIERTO EL TEXTO A ESCALA DE GRISES*/
-		Mat img_preprocesed = new Mat(txt_original.size(),CvType.CV_8UC1);
-		Imgproc.cvtColor(txt_original, img_preprocesed, Imgproc.COLOR_BGR2GRAY);
+		Mat img_preprocesed = new Mat(img_original.size(),CvType.CV_8UC1);
+		Imgproc.cvtColor(img_original, img_preprocesed, Imgproc.COLOR_BGR2GRAY);
+		Imgproc.cvtColor(img_original, img_original, Imgproc.COLOR_BGR2GRAY);
 		
-		/*CONVIERTO EL TEXTO A BLANCO Y NEGRO*/
-		Imgproc.adaptiveThreshold(img_preprocesed, img_preprocesed, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 15, 4);
-		Imgcodecs.imwrite(path_texto, img_preprocesed); 
-		
+				
+		RotatedRect minRect = this.rotatedAngle(img_preprocesed);
+	    	    
+	    /*ROTO LA IMAGEN ORIGINAL*/
+	    Mat rotImage = Imgproc.getRotationMatrix2D(minRect.center, minRect.angle, 1);
+	    Mat rotated = new Mat();
+	    Imgproc.warpAffine(img_original, rotated, rotImage, img_original.size(), Imgproc.INTER_CUBIC);
+	    
+		/*CONVIERTO EL TEXTO A BLANCO Y NEGRO DE LA IMAGEN ORIGINAL => FONDO BLANCO Y LETRAS NEGRAS*/
+		Imgproc.adaptiveThreshold(img_original, img_original, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 15, 4);
+	    	
+		Imgcodecs.imwrite(path_texto, img_original);
 		return path_texto;
 	}
+	
+	public RotatedRect rotatedAngle(Mat img){
+		
+		/*CONVIERTO EL TEXTO A BLANCO Y NEGRO DE LA IMAGEN => FONDO NEGRO Y LETRAS BLANCAS*/		
+		Imgproc.adaptiveThreshold(img, img, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 15, 4);
+		
+		/*APLICO ERODE SOBRE LA IMAGEN A PREPROCESAR*/
+		Mat element = Imgproc.getStructuringElement(
+			    Imgproc.MORPH_CROSS, new Size(5, 3));	
+		Imgproc.erode(img, img, element);
+		
+		
+		/*BUSCO LOS PIXELES BLANCOS DE LA IMAGEN A PREPROCESAR Y LOS GUARDO EN UNA LISTA DE PUNTOS*/
+		ArrayList<Point> pointsInterestList = new ArrayList<Point>();
+	
+	    for (int j = 0; j < img.rows(); j++) {
+	        for (int k = 0; k < img.cols(); k++) {
+	            double[] pixel = img.get(j, k);
 
+	            if (pixel[0] == 255) {
+	                //add Point of Mat to list of points
+	                Point point = new Point(k, j);
+	                pointsInterestList.add(point);
+	            }
+	        }
+	    }
+	
+	    MatOfPoint2f m2fFromList = new MatOfPoint2f();
+	    m2fFromList.fromList(pointsInterestList); //create MatOfPoint2f from list of points
+	    MatOfPoint2f m2f = new MatOfPoint2f();
+	    m2fFromList.convertTo(m2f, CvType.CV_32FC2); //convert to type of MatOfPoint2f created from list of points
+	    
+	    /*BUSCO EL ANGULO DE ROTACION*/
+	    RotatedRect minRect = Imgproc.minAreaRect(m2f);
+	    double angle = minRect.angle;
+	    if (angle < -45.)
+	        minRect.angle += 90.;	  
+		return minRect;
+	}
+	
+	
 	
 
 //templ_preprocesed = traitImage(templ_preprocesed);
