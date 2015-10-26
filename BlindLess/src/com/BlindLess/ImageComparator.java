@@ -213,7 +213,21 @@ public class ImageComparator extends Activity{
 		bmp_temp_2 = bmp_temp_2.copy(Bitmap.Config.ARGB_8888, true);
 		return bmp_temp_2;
 	}
-
+	
+	public String textPreprocess(String path_texto){
+		
+		Mat txt_original = Imgcodecs.imread(path_texto);
+		
+		/*CONVIERTO EL TEXTO A ESCALA DE GRISES*/
+		Mat img_preprocesed = new Mat(txt_original.size(),CvType.CV_8UC1);
+		Imgproc.cvtColor(txt_original, img_preprocesed, Imgproc.COLOR_BGR2GRAY);
+		
+		/*CONVIERTO EL TEXTO A BLANCO Y NEGRO*/
+		Imgproc.adaptiveThreshold(img_preprocesed, img_preprocesed, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 15, 4);
+		Imgcodecs.imwrite(path_texto, img_preprocesed); 
+		
+		return path_texto;
+	}
 
 	
 

@@ -130,6 +130,8 @@ public class CameraActivity extends Activity {
 		@Override
 		public int runCommand(byte[] data, Camera camera) {
 			
+			ImageComparator textComparator = new ImageComparator();
+			
 			File pictureFile = CommonMethods.getOutputMediaFile(MEDIA_TYPE_IMAGE);
 			if (pictureFile == null) {
 				Log.e("TAG",
@@ -137,7 +139,8 @@ public class CameraActivity extends Activity {
 				return -1;
 			}
 			
-			speak("Imagen capturada. Aguarde mientras se procesa.");
+			speakWithoutRepetir("Imagen capturada. Aguarde mientras se procesa.");
+			
 			
 			try {
 				FileOutputStream fos = new FileOutputStream(pictureFile);
@@ -154,7 +157,7 @@ public class CameraActivity extends Activity {
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inSampleSize = 1;
 				
-			Bitmap bitmap = BitmapFactory.decodeFile(pictureFile.getPath(), options );
+			Bitmap bitmap = BitmapFactory.decodeFile(textComparator.textPreprocess(pictureFile.getPath()), options );
 			
 			bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
 			TessBaseAPI baseApi = new TessBaseAPI();
@@ -162,7 +165,7 @@ public class CameraActivity extends Activity {
 			// lang = for which the language data exists, usually "eng"
 			
 			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789%$@#");
-			baseApi.setVariable(TessBaseAPI.VAR_CHAR_BLACKLIST, "!^&*()_+=-[]}{;:'\"\\|~`,./<>?");
+//			baseApi.setVariable(TessBaseAPI.VAR_CHAR_BLACKLIST, "!^&*()_+=-[]}{;:'\"\\|~`,./<>?");
 			
 			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
 			baseApi.setImage(bitmap);
