@@ -258,7 +258,7 @@ public class CameraActivity extends Activity {
 		}
 		
 		private int matchSupIzq(List<String> billetes, List<String> templates, boolean maxFound) {
-			int match_method = Imgproc.TM_CCOEFF_NORMED;
+			int match_method = Imgproc.TM_CCOEFF;
 			return startComparisson(billetes, templates, match_method, maxFound, new CommandComparisson() {
 				
 				@Override
@@ -315,8 +315,8 @@ public class CameraActivity extends Activity {
 				for (String template : templates) {	
 					templateNumber = template.substring(0, template.indexOf('_'));
 					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";
-					String templateToWrite = "storage/sdcard0/BlindLess/Templates/" + template + "_grey.jpg";
-					String outFile = "storage/sdcard0/BlindLess/Resultados/" + descripcionBillete + "_" + template + ".jpg";
+					String templateToWrite = "storage/sdcard0/BlindLess/Templates/" + template + "_canny.jpg";
+					String outFile = "storage/sdcard0/BlindLess/Resultados/" + descripcionBillete + "_" + template;
 					double valAux = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, templateToWrite, 
 							match_method, "Billete: " + descripcionBillete + ", Template: " + template);
 						
@@ -365,8 +365,8 @@ public class CameraActivity extends Activity {
 		
 		private void addTemplatesValue(String value, String pattern, List<String> templates) {
 			templates.add(value + "_" + pattern + "_" + 40);
-			templates.add(value + "_" + pattern + "_" + 60);
-			templates.add(value + "_" + pattern + "_" + 80);
+//			templates.add(value + "_" + pattern + "_" + 60);
+//			templates.add(value + "_" + pattern + "_" + 80);
 		}
 		
 	};
@@ -505,8 +505,9 @@ public class CameraActivity extends Activity {
 	}
 
     public void mensajePrincipal(){
-		speak("Pronuncie el comando ayuda para iniciar la guía de"
-			+ "detección o el comando volver para retornar al Menú principal");
+//		speak("Pronuncie el comando ayuda para iniciar la guía de"
+//			+ "detección o el comando volver para retornar al Menú principal");
+    	speak("Mensaje principal");
     }
 	
     //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.

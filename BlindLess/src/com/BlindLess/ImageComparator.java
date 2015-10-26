@@ -24,35 +24,88 @@ public class ImageComparator extends Activity{
 		try {
 
 	        // / Create the result matrix 
-	        int result_cols = img_preprocesed.cols() - templ_preprocesed.cols() + 1;
-	        int result_rows = img_preprocesed.rows() - templ_preprocesed.rows() + 1;
-	        Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
+//	        int result_cols = img_preprocesed.cols() - templ_preprocesed.cols() + 1;
+//	        int result_rows = img_preprocesed.rows() - templ_preprocesed.rows() + 1;
+//	        Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
 	
-	
-	        // / Do the Matching and Normalize
-	        Imgproc.matchTemplate(img_preprocesed, templ_preprocesed, result, match_method);
-	
-	        // / Localizing the best match with minMaxLoc
-	        MinMaxLocResult mmr = Core.minMaxLoc(result);
-	
-	        Point matchLoc;
-	        if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
-	            matchLoc = mmr.minLoc;
-	            Log.w("BLINDLESSTEST","***" + description + "-->" + "MinValue: " + mmr.minVal);
-	        } else {
-	            matchLoc = mmr.maxLoc;
-	            Log.w("BLINDLESSTEST","***" + description + "-->" + "MaxValue: " + mmr.maxVal);
-	        }
+	        MinMaxLocResult found = new MinMaxLocResult();
+	        found.maxVal = 0.0;
+	        for (double i = 0; i < 10; i++) {
+	        	Mat img_resized = img_preprocesed.clone();
+	        	Mat img_cloned = img_preprocesed.clone();
+	        	double newWidth = img_preprocesed.size().width * (1 - (i * 0.1));
+	        	double newHeight = img_preprocesed.size().height * (1 - (i * 0.1));
+				Imgproc.resize(img_resized, img_resized, new Size(newWidth, newHeight));
+				
+				double r = img_preprocesed.width() / newWidth;
+				
+				if (img_resized.size().height < templ_preprocesed.size().height || img_resized.size().width < templ_preprocesed.size().width) {
+					break;
+				}
+				
+				Imgproc.Canny(img_resized, img_resized, 50, 200);
+				
+		        int result_cols = img_resized.cols() - templ_preprocesed.cols() + 1;
+		        int result_rows = img_resized.rows() - templ_preprocesed.rows() + 1;
+		        Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
+				Imgproc.matchTemplate(img_resized, templ_preprocesed, result, match_method);
+				// / Localizing the best match with minMaxLoc
+		        MinMaxLocResult mmr = Core.minMaxLoc(result);
+		        
+		        Point matchLoc;
+		        if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
+		            matchLoc = mmr.minLoc;
+		            Log.w("BLINDLESSTEST","***" + description + "_esla: " + i + "-->" + "MinValue: " + String.valueOf(mmr.minVal).substring(0, String.valueOf(mmr.minVal).indexOf('.')));
+		        } else {
+		            matchLoc = mmr.maxLoc;
+		            Log.w("BLINDLESSTEST","***" + description + "_esla: " + i + "-->" + "MaxValue: " + String.valueOf(mmr.maxVal).substring(0, String.valueOf(mmr.maxVal).indexOf('.')));
+		        }
 
+		        // / Show me what you got
+		        Imgproc.rectangle(img_cloned, matchLoc, new Point(matchLoc.x + templ_preprocesed.size().width,
+		                matchLoc.y + templ_preprocesed.size().height), new Scalar(0, 255,0));
+		
+//		        // Save the visualized detection.
+//		        Imgcodecs.imwrite(outFile + "-" + i + ".jpg", img_resized);
+		        
+		        if (mmr.maxVal > found.maxVal) {
+					found.maxVal = mmr.maxVal;
+					found.maxLoc = mmr.maxLoc;
+					found.minVal = r; //No quiero guardar el minVal.. solo el width
+				}
+		        
+		        img_cloned.release();
+		        img_resized.release();
+			}
+	
+//	        // / Do the Matching and Normalize
+//	        Imgproc.matchTemplate(img_preprocesed, templ_preprocesed, result, match_method);
+//	
+//	        // / Localizing the best match with minMaxLoc
+//	        MinMaxLocResult mmr = Core.minMaxLoc(result);
+//	
+//	        Point matchLoc;
+//	        if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
+//	            matchLoc = mmr.minLoc;
+//	            Log.w("BLINDLESSTEST","***" + description + "-->" + "MinValue: " + mmr.minVal);
+//	        } else {
+//	            matchLoc = mmr.maxLoc;
+//	            Log.w("BLINDLESSTEST","***" + description + "-->" + "MaxValue: " + mmr.maxVal);
+//	        }
+//
 	        // / Show me what you got
-	        Imgproc.rectangle(img_preprocesed, matchLoc, new Point(matchLoc.x + templ_preprocesed.cols(),
-	                matchLoc.y + templ_preprocesed.rows()), new Scalar(0, 255, 0));
+	        Point matchLoc = new Point(found.maxLoc.x * found.minVal, found.maxLoc.y * found.minVal); //found.minval sería el r!
+	        Point matchLoc2 = new Point((found.maxLoc.x + templ_preprocesed.size().width) * found.minVal, (found.maxLoc.y + templ_preprocesed.size().height) * found.minVal); //found.minval sería el r!
+	        Imgproc.rectangle(img_preprocesed, matchLoc, matchLoc2, new Scalar(0, 255, 0));
 	
 //	        // Save the visualized detection.
-	        Imgcodecs.imwrite(outFile, img_preprocesed);
+	        Imgcodecs.imwrite(outFile + ".jpg", img_preprocesed);
 //	        Log.i("Image Comparator", "termino la comparacion");
 	        
-	        return mmr.maxVal;
+	        img_preprocesed.release();
+	        templ_preprocesed.release();
+	        
+	        return found.maxVal;
 		}catch (Exception e)
 		{
 			Log.e("***" + description + "***", "No se pudo leer este");
@@ -69,11 +122,13 @@ public class ImageComparator extends Activity{
 			Mat templ_preprocesed = Imgcodecs.imread(templateFile);
 		
 			//Preprocess image to grayScale
-			Imgproc.resize(img_preprocesed, img_preprocesed, new Size(620, 344));
+//			Imgproc.resize(img_preprocesed, img_preprocesed, new Size(620, 344));
 		    Imgproc.cvtColor(img_preprocesed, img_preprocesed, Imgproc.COLOR_BGR2GRAY);
+		    
 		    
 		    //Preprocess template to grayScale
 			Imgproc.cvtColor(templ_preprocesed, templ_preprocesed, Imgproc.COLOR_BGR2GRAY);
+//			Imgproc.Canny(templ_preprocesed, templ_preprocesed, 50, 200);
 //			Imgcodecs.imwrite(templateToWrite, templ_preprocesed);
 			
 			return comparate(img_preprocesed, templ_preprocesed, match_method, outFile, description);
@@ -96,7 +151,7 @@ public class ImageComparator extends Activity{
 		Imgproc.cvtColor(img_template, temp_preprocesed, Imgproc.COLOR_BGR2GRAY);
 		
 		/*APLICO MATCH TEMPLATE*/
-        return makeMatchTemplate(outFile, img_preprocesed, temp_preprocesed, 0.6);
+        return makeMatchTemplate(outFile + ".jpg", img_preprocesed, temp_preprocesed, 0.6);
 	}
 	
 	public Bitmap readCenter(String billeteToCheck, String templateToCheck,
@@ -150,7 +205,7 @@ public class ImageComparator extends Activity{
         
         /* GUARDO EL ROI EN UNA NUEVA IMAGEN (EL SUPIZQ ENCONTRADO) => IMAGEN PREPROCESADA RECORTADA EN EL AREA DE TEMPLATE DETECTADO */
         Mat ROI=img_preprocesed.submat((int)matchLoc.y,(int)(matchLoc.y + temp_preprocesed.rows()),(int)matchLoc.x,(int)(matchLoc.x + temp_preprocesed.cols()));
-        Imgcodecs.imwrite(outFile, ROI);
+        Imgcodecs.imwrite(outFile + ".jpg", ROI);
        
 		/*CONVIERTO El ROI A BITMAP PARA USAR TESSERACT Y CORROBORAR COINCIDENCIA CON EL TEMPLATE ORIGINAL*/ 
         Bitmap bmp_temp_2 = Bitmap.createBitmap(ROI.cols(), ROI.rows(), Bitmap.Config.ARGB_8888);
