@@ -17,5 +17,5 @@ interface CommandComparisson {
 }
 
 interface CommandRead {
-	Bitmap runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck, String outFile);
+	BestMatches runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck, String outFile);
 }

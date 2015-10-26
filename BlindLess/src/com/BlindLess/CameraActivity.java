@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,27 +14,24 @@ import java.util.TimerTask;
 
 import org.opencv.imgproc.Imgproc;
 
-import com.googlecode.tesseract.android.TessBaseAPI;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
-import android.nfc.NfcAdapter.ReaderCallback;
 import android.os.Bundle;
-import android.view.SurfaceView;
-import android.view.Window;
-import android.view.WindowManager;
-import android.view.WindowManager.LayoutParams;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
+import android.view.SurfaceView;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.WindowManager.LayoutParams;
 import android.widget.FrameLayout;
+
+import com.googlecode.tesseract.android.TessBaseAPI;
 
 
 public class CameraActivity extends Activity {
@@ -52,6 +50,7 @@ public class CameraActivity extends Activity {
 	//text-to-speech fields
     public Speaker speaker; 
     private static final int TTS_CHECK = 10;
+	protected static final double MINVAL_SUPPORTED = 4500000.0;
     
     //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
@@ -215,8 +214,8 @@ public class CameraActivity extends Activity {
 			billetes.add(pictureFile.getPath());	
 			
 			//Old Method to detect supizq value from picture
-			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return 1;
-//			if (MatchPatternsFor(CommonMethods.SUPIZQ_TEXT, billetes) > 0) return 1;
+//			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return 1;
+			if (MatchPatternsFor(CommonMethods.SUPIZQ_TEXT, billetes) > 0) return 1;
 //			if (MatchPatternsFor(CommonMethods.MEDIO_TEXT, billetes) > 0) return 1;
 //			if (MatchPatternsFor("infder", billetes) > 0) return 1;
 			
@@ -225,7 +224,7 @@ public class CameraActivity extends Activity {
 		
 		private CommandRead readSupIzqCommand = new CommandRead() {
 			@Override
-			public Bitmap runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck,
+			public BestMatches runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck,
 					String outFile) {
 				return comparator.readSupIzq(billeteToCheck, templateToCheck, outFile);
 			}
@@ -233,7 +232,7 @@ public class CameraActivity extends Activity {
 		
 		private CommandRead readCenterCommand = new CommandRead() {
 			@Override
-			public Bitmap runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck,
+			public BestMatches runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck,
 					String outFile) {
 				return comparator.readCenter(billeteToCheck, templateToCheck, outFile);
 			}
@@ -248,12 +247,13 @@ public class CameraActivity extends Activity {
 			addTemplatesValue("50", pattern, templates);
 			addTemplatesValue("100", pattern, templates);
 			
-//			if (pattern.equals(CommonMethods.SUPIZQ_TEXT)){
-//				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand);
-//			}else 
-				if (pattern.equals(CommonMethods.SUPIZQ_VAL)){
-					return matchSupIzq(billetes, templates, true);
-				}
+			if (pattern.equals(CommonMethods.SUPIZQ_TEXT)){
+				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand);
+			}
+//			else 
+//				if (pattern.equals(CommonMethods.SUPIZQ_VAL)){
+//					return matchSupIzq(billetes, templates, true);
+//				}
 //			}else if (pattern.equals(CommonMethods.MEDIO_TEXT)){
 //				return matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand);
 //			}
@@ -279,31 +279,66 @@ public class CameraActivity extends Activity {
 			TessBaseAPI baseApi = new TessBaseAPI();
 			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
 			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, whiteList);
-			
+			double maxVal = 0.0;
+			String templateGanador = "";
+			ArrayList<String> billetesLeidos = new ArrayList<String>();
 			for (String billeteToCheck : billetes) {
 				for (String template : templates) {
 					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";
 					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultado" + 
 						billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1) 
 						+ "_" + template + ".jpg";
-					Bitmap supIzq = readCommand.runCommand(comparator, billeteToCheck, templateToCheck, outFile);
-					if (supIzq == null) continue;
-					baseApi.setImage(supIzq);
+					BestMatches bestMatch = readCommand.runCommand(comparator, billeteToCheck, templateToCheck, outFile);
+					if (bestMatch.getImage() == null) continue;
+					baseApi.setImage(bestMatch.getImage());
 					String textoLeido = baseApi.getUTF8Text();
 					Log.w("BLINDLESSTEST","Leyó: " + textoLeido);
 					String billeteReconocido = CommonMethods.esBilleteValido(textoLeido, contains);
+					
 					if (!billeteReconocido.equals("")) {
-						speak("Es un billete de: " + billeteReconocido + " pesos");
-						return 1;
+						billetesLeidos.add(billeteReconocido);
+					}
+
+					//Save best match
+					if (bestMatch.getMaxVal() > maxVal) {
+						templateGanador = template.substring(0, template.indexOf('_'));
+						maxVal = bestMatch.getMaxVal();
 					}
 				}
 			}
-			Log.w("BLINDLESSTEST","No se encontró patrón amigo");
-			return 0;
+			
+			if (maxVal > MINVAL_SUPPORTED) {
+				Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
+				speak("Es un billete de: " + templateGanador + " pesos");
+				return 1;
+			}else{
+				return ReadBilletesLeidos(billetesLeidos);
+			}
+//			Log.w("BLINDLESSTEST","No se encontró patrón amigo");
+//			return 0;
 		}
 
 
 		//No usado por ahora, pero sirve para hacer la vieja comparación
+
+		private int ReadBilletesLeidos(List<String> billetesLeidos) {
+			int max = 0;
+			String billeteReconocido = "";
+			for (String billete : billetesLeidos) {
+				int occurrences = Collections.frequency(billetesLeidos, billete);
+				if (occurrences > max){
+					billeteReconocido = billete;
+				}
+			}
+			if (!billeteReconocido.equals("")) {
+				Log.w("BLINDLESSTEST","Finalmente es de: " + billeteReconocido);
+				speak("Es un billete de: " + billeteReconocido + " pesos");
+				return 1;
+			}
+			
+			Log.w("BLINDLESSTEST","No se encontró patrón amigo");
+			return 0;
+		}
 
 		private int startComparisson(List<String> billetes,
 				List<String> templates, int match_method, boolean maxFound, CommandComparisson comparisson) {

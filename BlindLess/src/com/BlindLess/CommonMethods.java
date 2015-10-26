@@ -15,7 +15,7 @@ public class CommonMethods {
     public static final int REPETIR_MSJ_PRINCIPAL = 30000;
 	public static final String MODO_RECONOCIMIENTO_TEXTO = "Texto";
 	public static final String MODO_RECONOCIMIENTO_BILLETE = "Billete";
-	public static final String NUMERO_BILLETE = "0125";
+	public static final String NUMERO_BILLETE = "0125B";
 	public static final String LETRAS_BILLETE = "acdeinostuvzACDEINOSTUVZ";
     public static final String MEDIO_TEXT = "medio";
 	public static final String SUPIZQ_TEXT = "supizq";
