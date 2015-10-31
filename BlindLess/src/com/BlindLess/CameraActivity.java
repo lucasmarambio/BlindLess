@@ -249,7 +249,7 @@ public class CameraActivity extends Activity {
 			addTemplatesValue("100", pattern, templates);
 			
 //			if (pattern.equals(CommonMethods.SUPIZQ_TEXT)){
-//				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand);
+//				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand, false);
 //			}
 //			else 
 			if (pattern.equals(CommonMethods.SUPIZQ_VAL)){
@@ -260,7 +260,7 @@ public class CameraActivity extends Activity {
 //			}
 //			}else 
 			if (pattern.equals(CommonMethods.MEDIO_TEXT)){
-				return matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand);
+				return matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand, true);
 			}
 			return 0;
 		}
@@ -278,7 +278,7 @@ public class CameraActivity extends Activity {
 			});
 		}
 
-		private int matchAndRead(List<String> billetes, List<String> templates, boolean contains, String whiteList, CommandRead readCommand) {
+		private int matchAndRead(List<String> billetes, List<String> templates, boolean contains, String whiteList, CommandRead readCommand, boolean alPrimerMatch) {
 			/*INICIALIZO TESSERACT*/
 			ImageComparator comparator = new ImageComparator();
 			TessBaseAPI baseApi = new TessBaseAPI();
@@ -301,7 +301,12 @@ public class CameraActivity extends Activity {
 					String billeteReconocido = CommonMethods.esBilleteValido(textoLeido, contains);
 					
 					if (!billeteReconocido.equals("")) {
-						billetesLeidos.add(billeteReconocido);
+						if (alPrimerMatch) {
+							return leerBilleteFinal(billeteReconocido);
+						}else {
+							billetesLeidos.add(billeteReconocido);
+						}
+						
 					}
 
 					//Save best match
@@ -337,13 +342,17 @@ public class CameraActivity extends Activity {
 				}
 			}
 			if (!billeteReconocido.equals("")) {
-				Log.w("BLINDLESSTEST","Finalmente es de: " + billeteReconocido);
-				speak("Es un billete de: " + billeteReconocido + " pesos");
-				return 1;
+				return leerBilleteFinal(billeteReconocido);
 			}
 			
 			Log.w("BLINDLESSTEST","No se encontró patrón amigo");
 			return 0;
+		}
+
+		private int leerBilleteFinal(String billeteReconocido) {
+			Log.w("BLINDLESSTEST","Finalmente es de: " + billeteReconocido);
+			speak("Es un billete de: " + billeteReconocido + " pesos");
+			return 1;
 		}
 
 		private int startComparisson(List<String> billetes,
