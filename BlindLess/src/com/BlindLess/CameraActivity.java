@@ -163,8 +163,8 @@ public class CameraActivity extends Activity {
 			// DATA_PATH = Path to the storage
 			// lang = for which the language data exists, usually "eng"
 			
-			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
-			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789%$@#,.()");
+			baseApi.init("/storage/sdcard0/BlindLess/", "eng");
+//			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789%$@#,.()");
 //			baseApi.setVariable(TessBaseAPI.VAR_CHAR_BLACKLIST, "!^&*()_+=-[]}{;:'\"\\|~`,./<>?");
 			
 			baseApi.setImage(bitmap);
@@ -441,8 +441,8 @@ public class CameraActivity extends Activity {
 	    
 	  //set camera to continually auto-focus
 	    Camera.Parameters params = camera.getParameters();
-	    if (params.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
-	        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+	    if (params.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+	        params.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
 	    } else {
 	        //Choose another supported mode
 	    }

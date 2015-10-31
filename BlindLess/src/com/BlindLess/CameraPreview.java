@@ -8,6 +8,7 @@ import java.util.List;
 
 import android.content.Context;
 import android.hardware.Camera;
+import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.Size;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -37,6 +38,8 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
         onTakePic = callbackOnTakePic;
         mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
         
+        setFocusable(true);
+        setFocusableInTouchMode(true);
         
 //        addView(mSurfaceView);
         mHolder = mSurfaceView.getHolder();
@@ -44,16 +47,20 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         
         this.setOnTouchListener(new View.OnTouchListener() {
-			
-			@Override
+        	@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if (initTouch) {
-					mCamera.takePicture(null, null, mPictureCallback);
-					initTouch = false;
-				}
-				return false;
-			}		
-
+					mCamera.autoFocus(new AutoFocusCallback() {
+				        @Override
+				        public void onAutoFocus(boolean success, Camera camera) {
+				            if(success){
+				                camera.takePicture(null, null, mPictureCallback);
+				            }
+				        }
+				    });
+			    }
+				return true;
+			}	
 		}); 
     }
 
