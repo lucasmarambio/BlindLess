@@ -455,8 +455,8 @@ public class CameraActivity extends Activity {
 	    
 	  //set camera to continually auto-focus
 	    Camera.Parameters params = camera.getParameters();
-	    if (params.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
-	        params.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+	    if (params.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+	        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
 	    } else {
 	        //Choose another supported mode
 	    }
