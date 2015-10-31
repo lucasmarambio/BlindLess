@@ -47,6 +47,7 @@ public class ImageComparator extends Activity{
 	        img_preprocesed.release();
 	        templ_preprocesed.release();
 	        
+	        
 	        return found.maxVal;
 		}catch (Exception e)
 		{
@@ -61,11 +62,11 @@ public class ImageComparator extends Activity{
 			Mat templ_preprocesed, int match_method, String description) {
 		MinMaxLocResult found = new MinMaxLocResult();
 		found.maxVal = 0.0;
-		for (double i = 0; i < 10; i++) {
+		for (double i = 0; i < 15; i++) {
 			Mat img_resized = img_preprocesed.clone();
 			Mat img_cloned = img_preprocesed.clone();
-			double newWidth = img_preprocesed.size().width * (1 - (i * 0.1));
-			double newHeight = img_preprocesed.size().height * (1 - (i * 0.1));
+			double newWidth = img_preprocesed.size().width * (1 - (i * 0.05));
+			double newHeight = img_preprocesed.size().height * (1 - (i * 0.05));
 			Imgproc.resize(img_resized, img_resized, new Size(newWidth, newHeight));
 			
 			double r = img_preprocesed.width() / newWidth;
@@ -122,7 +123,6 @@ public class ImageComparator extends Activity{
 //			Imgproc.resize(img_preprocesed, img_preprocesed, new Size(620, 344));
 		    Imgproc.cvtColor(img_preprocesed, img_preprocesed, Imgproc.COLOR_BGR2GRAY);
 		    
-		    
 		    //Preprocess template to grayScale
 			Imgproc.cvtColor(templ_preprocesed, templ_preprocesed, Imgproc.COLOR_BGR2GRAY);
 //			Imgproc.Canny(templ_preprocesed, templ_preprocesed, 50, 200);
@@ -162,24 +162,20 @@ public class ImageComparator extends Activity{
 		Utils.matToBitmap(ROI, bmp_temp_2);
 		bmp_temp_2 = bmp_temp_2.copy(Bitmap.Config.ARGB_8888, true);
 		BestMatches bestMatch = new BestMatches(bmp_temp_2, found.maxVal);
+		
+		img_template.release();
+		img_billete.release();
 		return bestMatch;
 //        return makeMatchTemplate(outFile + ".jpg", img_preprocesed, temp_preprocesed, 0.6);
 	}
 	
 	public BestMatches readCenter(String billeteToCheck, String templateToCheck,
 			String outFile) {
-		/*LEO IMAGEN ORIGINAL (BILLETE) Y TEMPLATE ORIGINAL*/
-		Mat img_billete = Imgcodecs.imread(billeteToCheck);
-		Mat img_template = Imgcodecs.imread(templateToCheck);
-		
-		/*CONVIERTO LA IMAGEN Y EL TEMPLATE A ESCALA DE GRISES*/
-		Mat img_preprocesed = new Mat(img_billete.size(),CvType.CV_8UC1);
-		Mat temp_preprocesed = new Mat(img_template.size(),CvType.CV_8UC1);
-		Imgproc.cvtColor(img_billete, img_preprocesed, Imgproc.COLOR_BGR2GRAY);
-		Imgproc.cvtColor(img_template, temp_preprocesed, Imgproc.COLOR_BGR2GRAY);
+
+		BestMatches bestMatch = readSupIzq(billeteToCheck, templateToCheck, outFile);
 		
 		/*APLICO MATCH TEMPLATE*/
-		BestMatches bestMatch = new BestMatches(RotateBitmap(makeMatchTemplate(outFile, img_preprocesed, temp_preprocesed, 0.2),90), 0.0);
+		bestMatch.setImage(RotateBitmap(bestMatch.getImage(),90));
         return bestMatch;
 	}
 	
@@ -188,7 +184,9 @@ public class ImageComparator extends Activity{
 		if (source == null) return null;
 	      Matrix matrix = new Matrix();
 	      matrix.postRotate(angle);
-	      return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+	      Bitmap sourceAngle = Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+	      source.recycle();
+	      return sourceAngle;
 	}
 	
 // TRAIT IMAGE
