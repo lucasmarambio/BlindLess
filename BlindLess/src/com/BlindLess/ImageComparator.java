@@ -20,6 +20,7 @@ import org.opencv.imgproc.Imgproc;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.text.style.AlignmentSpan.Standard;
 import android.util.Log;
 
 public class ImageComparator extends Activity{
@@ -229,6 +230,7 @@ public class ImageComparator extends Activity{
 	
 	public String textPreprocess(String path_texto){
 		
+		String path_cropped = "storage/sdcard0/PatronesBilletes/crop.jpg";
 		Mat img_original = Imgcodecs.imread(path_texto);
 		
 		/*CONVIERTO EL TEXTO A ESCALA DE GRISES*/
@@ -246,8 +248,8 @@ public class ImageComparator extends Activity{
 	    
 		/*CONVIERTO EL TEXTO A BLANCO Y NEGRO DE LA IMAGEN ORIGINAL => FONDO BLANCO Y LETRAS NEGRAS*/
 		Imgproc.adaptiveThreshold(img_original, img_original, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 15, 4);
-	    	
-		Imgcodecs.imwrite(path_texto, img_original);
+
+		Imgcodecs.imwrite(path_texto, img_original);				
 		return path_texto;
 	}
 	

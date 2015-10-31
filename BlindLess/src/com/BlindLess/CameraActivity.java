@@ -15,7 +15,6 @@ import java.util.TimerTask;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,7 +23,10 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.view.GestureDetectorCompat;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.Window;
 import android.view.WindowManager;
@@ -34,7 +36,7 @@ import android.widget.FrameLayout;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 
-public class CameraActivity extends Activity {
+public class CameraActivity extends Activity implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener  {
 
 	private static final String COMANDO_SALIR = "salir";
 	private static final String COMANDO_VOLVER = "volver";
@@ -42,8 +44,6 @@ public class CameraActivity extends Activity {
 	private static final String COMANDO_REPETIR = "repetir";
 	private Camera mCamera;
     private CameraPreview mPreview;
-	private Activity act;
-	private Context ctx;
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
     
@@ -63,13 +63,15 @@ public class CameraActivity extends Activity {
     private Timer timer;
     private TimerTask task;
 	private android.os.Handler handler;
+	
+	static final String DEBUG_TAG = "Gestures";
+	public GestureDetectorCompat gDetector;
+	
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         
     	super.onCreate(savedInstanceState);
-		ctx = this;
-		act = this;
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_camera);
@@ -86,6 +88,8 @@ public class CameraActivity extends Activity {
 	    Bundle bundle = getIntent().getExtras();
 	    actualModo = bundle.getString("modo");
 	    initializeServices(actualModo);
+	    gDetector = new GestureDetectorCompat( getBaseContext(), this );
+	    
         
 //		preview.setOnTouchListener(new View.OnTouchListener() {
 //			
@@ -164,8 +168,8 @@ public class CameraActivity extends Activity {
 			// lang = for which the language data exists, usually "eng"
 			
 			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
-			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789%$@#,.()");
-//			baseApi.setVariable(TessBaseAPI.VAR_CHAR_BLACKLIST, "!^&*()_+=-[]}{;:'\"\\|~`,./<>?");
+//			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "áéíóúabcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789%$@#,.();-:");
+			baseApi.setVariable(TessBaseAPI.VAR_CHAR_BLACKLIST, "^&*_-[]}{'\"\\|~`,./<>");
 			
 			baseApi.setImage(bitmap);
 			String recognizedText = baseApi.getUTF8Text();
@@ -678,7 +682,69 @@ public class CameraActivity extends Activity {
 //			} catch (RuntimeException ex){
 //			}
 //		}
-	} 
+	}
 	
+    @Override 
+    public boolean onTouchEvent(MotionEvent event){ 
+        this.gDetector.onTouchEvent(event);
+        // Be sure to call the superclass implementation
+        return super.onTouchEvent(event);
+    }
+
+	@Override
+	public boolean onSingleTapConfirmed(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onDoubleTap(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onDoubleTapEvent(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onDown(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void onShowPress(MotionEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean onSingleTapUp(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+			float distanceY) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+    @Override
+    public void onLongPress(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onLongPress: " + event.toString()); 
+        	finish(); 
+    }
+
+	@Override
+	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+			float velocityY) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 	
 }
