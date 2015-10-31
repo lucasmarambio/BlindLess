@@ -25,6 +25,7 @@ public class CommonMethods {
 	public static final String SUPIZQ_VAL = "supizq";
 	protected static final String INFDER_VAL = "infder";
 	protected static final String MEDIO_VAL = "medio";
+	protected static final String ROMBO_VAL = "rombo";
 	private static String[] numeroBilletesReconocidos = {
 		"2", "5", "10","20","50","100"
 		};

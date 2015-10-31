@@ -51,6 +51,7 @@ public class CameraActivity extends Activity {
     public Speaker speaker; 
     private static final int TTS_CHECK = 10;
 	protected static final double MINVAL_SUPPORTED = 4500000.0;
+	protected static final double MINVAL_SUPPORTED_2 = 3500000.0;
     
     //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
@@ -156,7 +157,7 @@ public class CameraActivity extends Activity {
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inSampleSize = 1;
 				
-			Bitmap bitmap = BitmapFactory.decodeFile(textComparator.textPreprocess(pictureFile.getPath()), options );
+			Bitmap bitmap = BitmapFactory.decodeFile(textComparator.textPreprocess(pictureFile.getPath(), true), options );
 			
 			bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
 			TessBaseAPI baseApi = new TessBaseAPI();
@@ -183,6 +184,8 @@ public class CameraActivity extends Activity {
 		@Override
 		public int runCommand(byte[] data, Camera camera) {
 			
+			ImageComparator textComparator = new ImageComparator();
+			
 			File pictureFile = CommonMethods.getOutputMediaFile(MEDIA_TYPE_IMAGE);
 			if (pictureFile == null) {
 				Log.e("TAG",
@@ -192,6 +195,9 @@ public class CameraActivity extends Activity {
 			
 //			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
 //			bitmap = Bitmap.createScaledBitmap(bitmap, 640, 480, true);
+			
+			cleanTimer();
+			cleanSpeecher();
 //			
 			try {
 				FileOutputStream fos = new FileOutputStream(pictureFile);
@@ -209,17 +215,22 @@ public class CameraActivity extends Activity {
 				Log.e("TAG", "Error accessing file: " + e.getMessage());
 			}
 			Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
+			
+//			textComparator.textPreprocess(pictureFile.getPath(), false);
 						
 			List<String> billetes = new ArrayList<String>();
 			billetes.add(pictureFile.getPath());	
 			
 			//Old Method to detect supizq value from picture
 			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return 1;
+			if (MatchPatternsFor(CommonMethods.INFDER_VAL, billetes) > 0) return 1;
 //			if (MatchPatternsFor(CommonMethods.MEDIO_VAL, billetes) > 0) return 1;
 //			if (MatchPatternsFor(CommonMethods.SUPIZQ_TEXT, billetes) > 0) return 1;
 			if (MatchPatternsFor(CommonMethods.MEDIO_TEXT, billetes) > 0) return 1;
 //			if (MatchPatternsFor("infder", billetes) > 0) return 1;
 			
+			speak(""); //reinicializa el speech
+			startRecognition();
 			return 1; //TODO: Tiene que devolver 0, para sacar una foto automatica, pero por ahora que devuelva 1. 
 		}
 		
@@ -253,7 +264,10 @@ public class CameraActivity extends Activity {
 //			}
 //			else 
 			if (pattern.equals(CommonMethods.SUPIZQ_VAL)){
-				return matchSupIzq(billetes, templates, true);
+				return matchSupIzq(billetes, templates, true, MINVAL_SUPPORTED);
+			}
+			if (pattern.equals(CommonMethods.INFDER_VAL)){
+				return matchSupIzq(billetes, templates, true, MINVAL_SUPPORTED_2);
 			}
 //			if (pattern.equals(CommonMethods.MEDIO_VAL)){
 //				return matchSupIzq(billetes, templates, true);
@@ -265,9 +279,9 @@ public class CameraActivity extends Activity {
 			return 0;
 		}
 		
-		private int matchSupIzq(List<String> billetes, List<String> templates, boolean maxFound) {
+		private int matchSupIzq(List<String> billetes, List<String> templates, boolean maxFound, double minvalSupported) {
 			int match_method = Imgproc.TM_CCOEFF;
-			return startComparisson(billetes, templates, match_method, maxFound, new CommandComparisson() {
+			return startComparisson(billetes, templates, match_method, maxFound, minvalSupported, new CommandComparisson() {
 				
 				@Override
 				public double runCommand(String billeteToCheck, String templateToCheck,
@@ -290,7 +304,7 @@ public class CameraActivity extends Activity {
 			for (String billeteToCheck : billetes) {
 				for (String template : templates) {
 					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";
-					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultado" + 
+					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultadomedio" + 
 						billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1) 
 						+ "_" + template + ".jpg";
 					BestMatches bestMatch = readCommand.runCommand(comparator, billeteToCheck, templateToCheck, outFile);
@@ -356,7 +370,7 @@ public class CameraActivity extends Activity {
 		}
 
 		private int startComparisson(List<String> billetes,
-				List<String> templates, int match_method, boolean maxFound, CommandComparisson comparisson) {
+				List<String> templates, int match_method, boolean maxFound, double minvalSupported, CommandComparisson comparisson) {
 			double maxVal, val;
 			String templateGanador, actualTemplate, templateNumber = "";
 			for (String billeteToCheck : billetes) {
@@ -406,7 +420,7 @@ public class CameraActivity extends Activity {
 					}
 				}
 				
-				if (maxVal > MINVAL_SUPPORTED) {
+				if (maxVal > minvalSupported) {
 					Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
 					speak("Es un billete de: " + templateGanador + " pesos");
 					return 1;

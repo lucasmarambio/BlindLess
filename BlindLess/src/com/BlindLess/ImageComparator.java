@@ -225,7 +225,7 @@ public class ImageComparator extends Activity{
 	}
 
 	
-	public String textPreprocess(String path_texto){
+	public String textPreprocess(String path_texto, boolean toWhiteAndBlack){
 		
 		Mat img_original = Imgcodecs.imread(path_texto);
 		
@@ -242,10 +242,18 @@ public class ImageComparator extends Activity{
 	    Mat rotated = new Mat();
 	    Imgproc.warpAffine(img_original, rotated, rotImage, img_original.size(), Imgproc.INTER_CUBIC);
 	    
-		/*CONVIERTO EL TEXTO A BLANCO Y NEGRO DE LA IMAGEN ORIGINAL => FONDO BLANCO Y LETRAS NEGRAS*/
-		Imgproc.adaptiveThreshold(img_original, img_original, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 15, 4);
-	    	
+		if (toWhiteAndBlack) {
+			/*CONVIERTO EL TEXTO A BLANCO Y NEGRO DE LA IMAGEN ORIGINAL => FONDO BLANCO Y LETRAS NEGRAS*/
+			Imgproc.adaptiveThreshold(img_original, img_original, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 15, 4);
+		}
+		
 		Imgcodecs.imwrite(path_texto, img_original);
+		
+		img_original.release();
+		img_preprocesed.release();
+		rotImage.release();
+		rotated.release();
+		
 		return path_texto;
 	}
 	
