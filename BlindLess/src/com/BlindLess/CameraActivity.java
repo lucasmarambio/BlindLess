@@ -449,25 +449,27 @@ public class CameraActivity extends Activity {
 	
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
-		Log.w("RODRILOG", ">> InitializeSpeech Camera");
-		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(CameraActivity.this);
-		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-				"es-ES");
+		if (CommonMethods.verificaConexion(this))
+		{
+			Log.w("RODRILOG", ">> InitializeSpeech Camera");
+			mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(CameraActivity.this);
+			mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+			mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+					"es-ES");
 
-
-		SpeechRecognitionListener listener = 
-				new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
-										public void runCommand() { 
-											Log.w("RODRILOG", ">> InitializeSpeechOnError Camera");
-											if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
-											initializeSpeech();
-											startRecognition();
-											Log.w("RODRILOG", "<< InitializeSpeechOnError Camera");
-										};
-        });
-		mSpeechRecognizer.setRecognitionListener(listener);
-		Log.w("RODRILOG", "<< InitializeSpeech Camera");
+			SpeechRecognitionListener listener = 
+					new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
+											public void runCommand() { 
+												Log.w("RODRILOG", ">> InitializeSpeechOnError Camera");
+												if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
+												initializeSpeech();
+												startRecognition();
+												Log.w("RODRILOG", "<< InitializeSpeechOnError Camera");
+											};
+	        });
+			mSpeechRecognizer.setRecognitionListener(listener);
+			Log.w("RODRILOG", "<< InitializeSpeech Camera");
+		}
 	}
 	
 	
@@ -577,13 +579,17 @@ public class CameraActivity extends Activity {
 		if (!mIsSpeaking)
 		{
 			Log.i("Speech", "Starting listening");
-		    mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+			if(mSpeechRecognizer != null)
+			{
+				mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+			}
 		}
 	}
 	
 	public void cleanSpeecher() {
 		Log.w("RODRILOG", ">> CleanSpeecher Camera");
-	    if(mSpeechRecognizer !=null){
+	    if(mSpeechRecognizer != null)
+	    {
 	    	mSpeechRecognizer.stopListening();
 	    	mSpeechRecognizer.cancel();
 	    	mSpeechRecognizer.destroy();              
@@ -593,7 +599,8 @@ public class CameraActivity extends Activity {
 	
 	public void cleanTimer() {
 		Log.w("RODRILOG", ">> cleanTimer Camera");
-		if (timer != null) {
+		if (timer != null) 
+		{
     		timer.cancel();
     		timer.purge();
     	}

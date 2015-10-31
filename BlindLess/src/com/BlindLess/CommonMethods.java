@@ -4,6 +4,9 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Environment;
 import android.util.Log;
 
@@ -11,8 +14,8 @@ public class CommonMethods {
 	
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
-    public static final int DECIR_MSJ_PRINCIPAL = 30000;
-    public static final int REPETIR_MSJ_PRINCIPAL = 30000;
+    public static final int DECIR_MSJ_PRINCIPAL = 10000;
+    public static final int REPETIR_MSJ_PRINCIPAL = 10000;
 	public static final String MODO_RECONOCIMIENTO_TEXTO = "Texto";
 	public static final String MODO_RECONOCIMIENTO_BILLETE = "Billete";
 	public static final String NUMERO_BILLETE = "0125";
@@ -93,4 +96,17 @@ public class CommonMethods {
 	    }
 	    return "";
 	}
+	
+    public static boolean verificaConexion(Context ctx) {
+        boolean bConectado = false;
+        ConnectivityManager connec = (ConnectivityManager) ctx
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] redes = connec.getAllNetworkInfo();
+        for (int i = 0; i < 2; i++) {
+            if (redes[i].getState() == NetworkInfo.State.CONNECTED) {
+                bConectado = true;
+            }
+        }
+        return bConectado;
+    }
 }

@@ -81,7 +81,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 		    mDetector.setOnDoubleTapListener(this);
 			
 			initializeSpeech();
-			verificaConexion(this);
 		
 		} catch (Exception e) {
 			// TODO: hacer algo
@@ -161,24 +160,27 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
 	//Speech Recognition necessary methods
 	private void initializeSpeech() {
-		Log.w("RODRILOG", ">> InitializeSpeech");
-		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
-		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-				"es-ES");
-
-		SpeechRecognitionListener listener = 
-			new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
-											public void runCommand() { 
-												Log.w("RODRILOG", ">> InitiliazeSpeechOnError");
-												if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
-												initializeSpeech();
-												startRecognition();
-												Log.w("RODRILOG", "<< InitiliazeSpeechOnError");
-											};
-										 });
-		mSpeechRecognizer.setRecognitionListener(listener);
-		Log.w("RODRILOG", "<< InitializeSpeech");
+		if (CommonMethods.verificaConexion(this))
+		{
+			Log.w("RODRILOG", ">> InitializeSpeech");
+			mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
+			mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+			mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+					"es-ES");
+	
+			SpeechRecognitionListener listener = 
+				new SpeechRecognitionListener(mSpeechRecognizer, commandDictionary, new Command() {
+												public void runCommand() { 
+													Log.w("RODRILOG", ">> InitiliazeSpeechOnError");
+													if(mSpeechRecognizer != null) mSpeechRecognizer.destroy();
+													initializeSpeech();
+													startRecognition();
+													Log.w("RODRILOG", "<< InitiliazeSpeechOnError");
+												};
+											 });
+			mSpeechRecognizer.setRecognitionListener(listener);
+			Log.w("RODRILOG", "<< InitializeSpeech");
+		}
 	}
 	
 	private void initDictionary() {
@@ -263,13 +265,17 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 		if (!mIsSpeaking)
 		{
 			Log.i("Speech", "Starting listening");
-		    mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+		    if (mSpeechRecognizer != null)
+		    {
+		    	mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+		    }
 		}
 	}
 	
 	public void cleanSpeecher() {
 		Log.w("RODRILOG", "matoSpeecher");
-	    if(mSpeechRecognizer !=null){
+	    if(mSpeechRecognizer != null)
+	    {
 	    	mSpeechRecognizer.stopListening();
 	    	mSpeechRecognizer.cancel();
 	    	mSpeechRecognizer.destroy();              
@@ -277,9 +283,11 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	    mSpeechRecognizer = null;
 	}
 	
-	public void cleanTimer() {
+	public void cleanTimer() 
+	{
 		Log.w("RODRILOG", "matoTimer");
-		if (timer != null) {
+		if (timer != null) 
+		{
     		timer.cancel();
     		timer.purge();
     	}
@@ -429,22 +437,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         	commandDictionary.get(COMANDO_DETECTAR_BILLETE).runCommand();
         }
         return false;
-    }
-    
-    public static boolean verificaConexion(Context ctx) {
-        boolean bConectado = false;
-        ConnectivityManager connec = (ConnectivityManager) ctx
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-        // No sólo wifi, también GPRS
-        NetworkInfo[] redes = connec.getAllNetworkInfo();
-        // este bucle debería no ser tan ñapa
-        for (int i = 0; i < 2; i++) {
-            // ¿Tenemos conexión? ponemos a true
-            if (redes[i].getState() == NetworkInfo.State.CONNECTED) {
-                bConectado = true;
-            }
-        }
-        return bConectado;
     }
  }
 
