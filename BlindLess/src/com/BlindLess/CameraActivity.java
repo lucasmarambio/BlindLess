@@ -214,9 +214,10 @@ public class CameraActivity extends Activity {
 			billetes.add(pictureFile.getPath());	
 			
 			//Old Method to detect supizq value from picture
-//			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return 1;
-			if (MatchPatternsFor(CommonMethods.SUPIZQ_TEXT, billetes) > 0) return 1;
-//			if (MatchPatternsFor(CommonMethods.MEDIO_TEXT, billetes) > 0) return 1;
+			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return 1;
+//			if (MatchPatternsFor(CommonMethods.MEDIO_VAL, billetes) > 0) return 1;
+//			if (MatchPatternsFor(CommonMethods.SUPIZQ_TEXT, billetes) > 0) return 1;
+			if (MatchPatternsFor(CommonMethods.MEDIO_TEXT, billetes) > 0) return 1;
 //			if (MatchPatternsFor("infder", billetes) > 0) return 1;
 			
 			return 1; //TODO: Tiene que devolver 0, para sacar una foto automatica, pero por ahora que devuelva 1. 
@@ -247,16 +248,20 @@ public class CameraActivity extends Activity {
 			addTemplatesValue("50", pattern, templates);
 			addTemplatesValue("100", pattern, templates);
 			
-			if (pattern.equals(CommonMethods.SUPIZQ_TEXT)){
-				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand);
-			}
-//			else 
-//				if (pattern.equals(CommonMethods.SUPIZQ_VAL)){
-//					return matchSupIzq(billetes, templates, true);
-//				}
-//			}else if (pattern.equals(CommonMethods.MEDIO_TEXT)){
-//				return matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand);
+//			if (pattern.equals(CommonMethods.SUPIZQ_TEXT)){
+//				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand);
 //			}
+//			else 
+			if (pattern.equals(CommonMethods.SUPIZQ_VAL)){
+				return matchSupIzq(billetes, templates, true);
+			}
+//			if (pattern.equals(CommonMethods.MEDIO_VAL)){
+//				return matchSupIzq(billetes, templates, true);
+//			}
+//			}else 
+			if (pattern.equals(CommonMethods.MEDIO_TEXT)){
+				return matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand);
+			}
 			return 0;
 		}
 		
@@ -304,16 +309,17 @@ public class CameraActivity extends Activity {
 						templateGanador = template.substring(0, template.indexOf('_'));
 						maxVal = bestMatch.getMaxVal();
 					}
+					bestMatch.release();
 				}
 			}
 			
-			if (maxVal > MINVAL_SUPPORTED) {
-				Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
-				speak("Es un billete de: " + templateGanador + " pesos");
-				return 1;
-			}else{
+//			if (maxVal > MINVAL_SUPPORTED) {
+//				Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
+//				speak("Es un billete de: " + templateGanador + " pesos");
+//				return 1;
+//			}else{
 				return ReadBilletesLeidos(billetesLeidos);
-			}
+//			}
 //			Log.w("BLINDLESSTEST","No se encontró patrón amigo");
 //			return 0;
 		}
@@ -391,7 +397,7 @@ public class CameraActivity extends Activity {
 					}
 				}
 				
-				if (maxVal > 0.0) {
+				if (maxVal > MINVAL_SUPPORTED) {
 					Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
 					speak("Es un billete de: " + templateGanador + " pesos");
 					return 1;

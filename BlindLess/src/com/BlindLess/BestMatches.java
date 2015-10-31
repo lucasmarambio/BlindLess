@@ -27,4 +27,9 @@ public class BestMatches {
 	public void setMaxVal(double maxVal) {
 		this.maxVal = maxVal;
 	}
+
+	public void release() {
+		this.image.recycle();
+		this.maxVal = 0.0;
+	}
 }

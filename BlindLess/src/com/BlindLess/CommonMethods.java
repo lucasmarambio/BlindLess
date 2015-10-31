@@ -20,6 +20,8 @@ public class CommonMethods {
     public static final String MEDIO_TEXT = "medio";
 	public static final String SUPIZQ_TEXT = "supizq";
 	public static final String SUPIZQ_VAL = "supizq";
+	protected static final String INFDER_VAL = "infder";
+	protected static final String MEDIO_VAL = "medio";
 	private static String[] numeroBilletesReconocidos = {
 		"2", "5", "10","20","50","100"
 		};
