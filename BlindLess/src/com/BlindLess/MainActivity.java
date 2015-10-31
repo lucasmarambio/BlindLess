@@ -19,7 +19,10 @@ import org.opencv.android.OpenCVLoader;
 import com.BlindLess.R;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -77,7 +80,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 		    mDetector = new GestureDetectorCompat(this,this);
 		    mDetector.setOnDoubleTapListener(this);
 			
-			initializeSpeech();    
+			initializeSpeech();
+			verificaConexion(this);
 		
 		} catch (Exception e) {
 			// TODO: hacer algo
@@ -425,6 +429,22 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         	commandDictionary.get(COMANDO_DETECTAR_BILLETE).runCommand();
         }
         return false;
+    }
+    
+    public static boolean verificaConexion(Context ctx) {
+        boolean bConectado = false;
+        ConnectivityManager connec = (ConnectivityManager) ctx
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        // No sólo wifi, también GPRS
+        NetworkInfo[] redes = connec.getAllNetworkInfo();
+        // este bucle debería no ser tan ñapa
+        for (int i = 0; i < 2; i++) {
+            // ¿Tenemos conexión? ponemos a true
+            if (redes[i].getState() == NetworkInfo.State.CONNECTED) {
+                bConectado = true;
+            }
+        }
+        return bConectado;
     }
  }
 
