@@ -30,22 +30,19 @@ public class ImageComparator extends Activity{
 		try {
 
 	        // / Create the result matrix
-	
 	        MinMaxLocResult found = resizeToFindBestMatch(img_preprocesed,
 					templ_preprocesed, match_method, description);
 	
 	        // / Show me what you got
-	        Point matchLoc = new Point(found.maxLoc.x * found.minVal, found.maxLoc.y * found.minVal); //found.minval sería el r!
-	        Point matchLoc2 = new Point((found.maxLoc.x + templ_preprocesed.size().width) * found.minVal, (found.maxLoc.y + templ_preprocesed.size().height) * found.minVal); //found.minval sería el r!
-	        Imgproc.rectangle(img_preprocesed, matchLoc, matchLoc2, new Scalar(0, 255, 0));
+//	        Point matchLoc = new Point(found.maxLoc.x * found.minVal, found.maxLoc.y * found.minVal); //found.minval sería el r!
+//	        Point matchLoc2 = new Point((found.maxLoc.x + templ_preprocesed.size().width) * found.minVal, (found.maxLoc.y + templ_preprocesed.size().height) * found.minVal); //found.minval sería el r!
+//	        Imgproc.rectangle(img_preprocesed, matchLoc, matchLoc2, new Scalar(0, 255, 0));
 	
 //	        // Save the visualized detection.
-	        Imgcodecs.imwrite(outFile + ".jpg", img_preprocesed);
+//	        Imgcodecs.imwrite(outFile + ".jpg", img_preprocesed);
 //	        Log.i("Image Comparator", "termino la comparacion");
-	        
 	        img_preprocesed.release();
 	        templ_preprocesed.release();
-	        
 	        
 	        return found.maxVal;
 		}catch (Exception e)
@@ -93,8 +90,8 @@ public class ImageComparator extends Activity{
 		    }
 
 		    // / Show me what you got
-		    Imgproc.rectangle(img_cloned, matchLoc, new Point(matchLoc.x + templ_preprocesed.size().width,
-		            matchLoc.y + templ_preprocesed.size().height), new Scalar(0, 255,0));
+//		    Imgproc.rectangle(img_cloned, matchLoc, new Point(matchLoc.x + templ_preprocesed.size().width,
+//		            matchLoc.y + templ_preprocesed.size().height), new Scalar(0, 255,0));
 
 //		        // Save the visualized detection.
 //		        Imgcodecs.imwrite(outFile + "-" + i + ".jpg", img_resized);
@@ -112,20 +109,9 @@ public class ImageComparator extends Activity{
 	}
 
 
-	public double comparateSupIzq(String inFile, String templateFile, String outFile, String templateToWrite, int match_method, String description) {
+	public double comparateSupIzq(Mat img_preprocesed, String templateFile, String outFile, String templateToWrite, int match_method, String description) {
 		try {
-			/*LEO LA IMAGEN Y EL TEMPLATE*/
-			Mat img_preprocesed = Imgcodecs.imread(inFile);
-			Mat templ_preprocesed = Imgcodecs.imread(templateFile);
-		
-			//Preprocess image to grayScale
-//			Imgproc.resize(img_preprocesed, img_preprocesed, new Size(620, 344));
-		    Imgproc.cvtColor(img_preprocesed, img_preprocesed, Imgproc.COLOR_BGR2GRAY);
-		    
-		    //Preprocess template to grayScale
-			Imgproc.cvtColor(templ_preprocesed, templ_preprocesed, Imgproc.COLOR_BGR2GRAY);
-//			Imgproc.Canny(templ_preprocesed, templ_preprocesed, 50, 200);
-//			Imgcodecs.imwrite(templateToWrite, templ_preprocesed);
+		    Mat templ_preprocesed = getImageToProcess(templateFile);
 			
 			return comparate(img_preprocesed, templ_preprocesed, match_method, outFile, description);
 		} catch (Exception e) {
@@ -133,16 +119,22 @@ public class ImageComparator extends Activity{
 			return 0.0;
 		}
 	}
+
+
+	public Mat getImageToProcess(String inFile) {
+		/*LEO LA IMAGEN Y EL TEMPLATE*/
+		Mat img_preprocesed = Imgcodecs.imread(inFile);
+
+		//Preprocess image to grayScale
+//			Imgproc.resize(img_preprocesed, img_preprocesed, new Size(620, 344));
+		Imgproc.cvtColor(img_preprocesed, img_preprocesed, Imgproc.COLOR_BGR2GRAY);
+		return img_preprocesed;
+	}
 	
-	public BestMatches readSupIzq(String billeteToCheck, String templateToCheck, String outFile){
+	public BestMatches readSupIzq(Mat img_billete, String templateToCheck, String outFile){
 			
 		/*LEO IMAGEN ORIGINAL (BILLETE) Y TEMPLATE ORIGINAL*/
-		Mat img_billete = Imgcodecs.imread(billeteToCheck);
-		Mat img_template = Imgcodecs.imread(templateToCheck);
-		
-		/*CONVIERTO LA IMAGEN Y EL TEMPLATE A ESCALA DE GRISES*/
-		Imgproc.cvtColor(img_billete, img_billete, Imgproc.COLOR_BGR2GRAY);
-		Imgproc.cvtColor(img_template, img_template, Imgproc.COLOR_BGR2GRAY);
+		Mat img_template = getImageToProcess(templateToCheck);
 		
 		/*Busco el punto donde mejor matchee el template y el billete*/
 		MinMaxLocResult found = resizeToFindBestMatch(img_billete,
@@ -168,7 +160,7 @@ public class ImageComparator extends Activity{
 //        return makeMatchTemplate(outFile + ".jpg", img_preprocesed, temp_preprocesed, 0.6);
 	}
 	
-	public BestMatches readCenter(String billeteToCheck, String templateToCheck,
+	public BestMatches readCenter(Mat billeteToCheck, String templateToCheck,
 			String outFile) {
 
 		BestMatches bestMatch = readSupIzq(billeteToCheck, templateToCheck, outFile);
