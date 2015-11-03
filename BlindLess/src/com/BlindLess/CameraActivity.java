@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
@@ -141,7 +142,6 @@ public class CameraActivity extends Activity {
 			
 			speakWithoutRepetir("Imagen capturada. Aguarde mientras se procesa.");
 			
-			
 			try {
 				FileOutputStream fos = new FileOutputStream(pictureFile);
 				fos.write(data);
@@ -173,6 +173,8 @@ public class CameraActivity extends Activity {
 			speak(recognizedText);
 			
 			speak("Texto leído.");
+			initializeSpeech();
+			startRecognition();
 			return 0;
 		}
 
@@ -183,8 +185,6 @@ public class CameraActivity extends Activity {
 
 		@Override
 		public int runCommand(byte[] data, Camera camera) {
-			
-			ImageComparator textComparator = new ImageComparator();
 			
 			File pictureFile = CommonMethods.getOutputMediaFile(MEDIA_TYPE_IMAGE);
 			if (pictureFile == null) {
@@ -204,11 +204,6 @@ public class CameraActivity extends Activity {
 				fos.write(data);
 				fos.close();
 				
-//				FileOutputStream fos = new FileOutputStream(pictureFile);
-//				bitmap.compress(Bitmap.CompressFormat.PNG, 85, fos);
-//				fos.flush();
-//				fos.close();
-//				Log.e("onPictureTaken", "save success, path: " + pictureFile.getPath());
 			} catch (FileNotFoundException e) {
 				Log.e("TAG", "File not found: " + e.getMessage());
 			} catch (IOException e) {
@@ -222,21 +217,27 @@ public class CameraActivity extends Activity {
 			billetes.add(pictureFile.getPath());	
 			
 			//Old Method to detect supizq value from picture
-			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return 1;
-			if (MatchPatternsFor(CommonMethods.INFDER_VAL, billetes) > 0) return 1;
+			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return endTakePic(billetes);
+			if (MatchPatternsFor(CommonMethods.MEDIO_TEXT, billetes) > 0)  return endTakePic(billetes);
+			if (MatchPatternsFor(CommonMethods.INFDER_VAL, billetes) > 0) return endTakePic(billetes);
 //			if (MatchPatternsFor(CommonMethods.MEDIO_VAL, billetes) > 0) return 1;
 //			if (MatchPatternsFor(CommonMethods.SUPIZQ_TEXT, billetes) > 0) return 1;
-			if (MatchPatternsFor(CommonMethods.MEDIO_TEXT, billetes) > 0) return 1;
 //			if (MatchPatternsFor("infder", billetes) > 0) return 1;
 			
-			speak(""); //reinicializa el speech
+			speak("El billete no pudo ser reconocido. Realice otra captura por favor."); //reinicializa el speech
+			return endTakePic(billetes);
+		}
+
+		private int endTakePic(List<String> billetes) {
+			initializeSpeech();
 			startRecognition();
-			return 1; //TODO: Tiene que devolver 0, para sacar una foto automatica, pero por ahora que devuelva 1. 
+			billetes.clear();
+			return 1;
 		}
 		
 		private CommandRead readSupIzqCommand = new CommandRead() {
 			@Override
-			public BestMatches runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck,
+			public BestMatches runCommand(ImageComparator comparator, Mat billeteToCheck, String templateToCheck,
 					String outFile) {
 				return comparator.readSupIzq(billeteToCheck, templateToCheck, outFile);
 			}
@@ -244,7 +245,7 @@ public class CameraActivity extends Activity {
 		
 		private CommandRead readCenterCommand = new CommandRead() {
 			@Override
-			public BestMatches runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck,
+			public BestMatches runCommand(ImageComparator comparator, Mat billeteToCheck, String templateToCheck,
 					String outFile) {
 				return comparator.readCenter(billeteToCheck, templateToCheck, outFile);
 			}
@@ -264,17 +265,23 @@ public class CameraActivity extends Activity {
 //			}
 //			else 
 			if (pattern.equals(CommonMethods.SUPIZQ_VAL)){
-				return matchSupIzq(billetes, templates, true, MINVAL_SUPPORTED);
+				int rtn = matchSupIzq(billetes, templates, true, MINVAL_SUPPORTED);
+				templates.clear();
+				return rtn;
 			}
 			if (pattern.equals(CommonMethods.INFDER_VAL)){
-				return matchSupIzq(billetes, templates, true, MINVAL_SUPPORTED_2);
+				int rtn =  matchSupIzq(billetes, templates, true, MINVAL_SUPPORTED_2);
+				templates.clear();
+				return rtn;
 			}
 //			if (pattern.equals(CommonMethods.MEDIO_VAL)){
 //				return matchSupIzq(billetes, templates, true);
 //			}
 //			}else 
 			if (pattern.equals(CommonMethods.MEDIO_TEXT)){
-				return matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand, true);
+				int rtn = matchAndRead(billetes,templates, true, CommonMethods.LETRAS_BILLETE, readCenterCommand, true);
+				templates.clear();
+				return rtn;
 			}
 			return 0;
 		}
@@ -284,9 +291,8 @@ public class CameraActivity extends Activity {
 			return startComparisson(billetes, templates, match_method, maxFound, minvalSupported, new CommandComparisson() {
 				
 				@Override
-				public double runCommand(String billeteToCheck, String templateToCheck,
+				public double runCommand(ImageComparator comparator, Mat billeteToCheck, String templateToCheck,
 						String outFile, String templateToWrite, int match_method, String description) {
-					ImageComparator comparator = new ImageComparator();
 					return comparator.comparateSupIzq(billeteToCheck, templateToCheck, outFile, templateToWrite, match_method, description);
 				}
 			});
@@ -302,12 +308,13 @@ public class CameraActivity extends Activity {
 			String templateGanador = "";
 			ArrayList<String> billetesLeidos = new ArrayList<String>();
 			for (String billeteToCheck : billetes) {
+				Mat img_billete = comparator.getImageToProcess(billeteToCheck);
 				for (String template : templates) {
 					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";
 					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultadomedio" + 
 						billeteToCheck.substring(billeteToCheck.length() - 9, billeteToCheck.length() - 1) 
 						+ "_" + template + ".jpg";
-					BestMatches bestMatch = readCommand.runCommand(comparator, billeteToCheck, templateToCheck, outFile);
+					BestMatches bestMatch = readCommand.runCommand(comparator, img_billete.clone(), templateToCheck, outFile);
 					if (bestMatch.getImage() == null) continue;
 					baseApi.setImage(bestMatch.getImage());
 					String textoLeido = baseApi.getUTF8Text();
@@ -330,17 +337,10 @@ public class CameraActivity extends Activity {
 					}
 					bestMatch.release();
 				}
+				img_billete.release();
 			}
 			
-//			if (maxVal > MINVAL_SUPPORTED) {
-//				Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
-//				speak("Es un billete de: " + templateGanador + " pesos");
-//				return 1;
-//			}else{
-				return ReadBilletesLeidos(billetesLeidos);
-//			}
-//			Log.w("BLINDLESSTEST","No se encontró patrón amigo");
-//			return 0;
+			return ReadBilletesLeidos(billetesLeidos);
 		}
 
 
@@ -356,10 +356,12 @@ public class CameraActivity extends Activity {
 				}
 			}
 			if (!billeteReconocido.equals("")) {
+				billetesLeidos.clear();
 				return leerBilleteFinal(billeteReconocido);
 			}
 			
 			Log.w("BLINDLESSTEST","No se encontró patrón amigo");
+			billetesLeidos.clear();
 			return 0;
 		}
 
@@ -379,12 +381,14 @@ public class CameraActivity extends Activity {
 				templateGanador = "";
 				actualTemplate = templates.get(0).substring(0, templates.get(0).indexOf('_'));
 				String descripcionBillete = billeteToCheck.substring(billeteToCheck.length() - 12, billeteToCheck.length() - 1);
+				ImageComparator comparator = new ImageComparator();
+				Mat img_billete = comparator.getImageToProcess(billeteToCheck);
 				for (String template : templates) {	
 					templateNumber = template.substring(0, template.indexOf('_'));
 					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";
 					String templateToWrite = "storage/sdcard0/BlindLess/Templates/" + template + "_canny.jpg";
 					String outFile = "storage/sdcard0/BlindLess/Resultados/" + descripcionBillete + "_" + template;
-					double valAux = comparisson.runCommand(billeteToCheck, templateToCheck, outFile, templateToWrite, 
+					double valAux = comparisson.runCommand(comparator, img_billete.clone(), templateToCheck, outFile, templateToWrite, 
 							match_method, "Billete: " + descripcionBillete + ", Template: " + template);
 						
 					if (maxFound){
@@ -425,6 +429,8 @@ public class CameraActivity extends Activity {
 					speak("Es un billete de: " + templateGanador + " pesos");
 					return 1;
 				}
+				
+				img_billete.release();
 			}
 			
 			return 0;

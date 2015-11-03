@@ -1,6 +1,7 @@
 package com.BlindLess;
 
-import android.graphics.Bitmap;
+import org.opencv.core.Mat;
+
 import android.hardware.Camera;
 
 
@@ -13,9 +14,9 @@ interface CommandCamera {
 }
 
 interface CommandComparisson {
-	double runCommand(String billeteToCheck, String templateToCheck, String outFile, String templateToWrite, int match_method, String string);
+	double runCommand(ImageComparator comparator, Mat billeteToCheck, String templateToCheck, String outFile, String templateToWrite, int match_method, String string);
 }
 
 interface CommandRead {
-	BestMatches runCommand(ImageComparator comparator, String billeteToCheck, String templateToCheck, String outFile);
+	BestMatches runCommand(ImageComparator comparator, Mat billeteToCheck, String templateToCheck, String outFile);
 }
