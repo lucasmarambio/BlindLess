@@ -83,10 +83,10 @@ public class ImageComparator extends Activity{
 		    Point matchLoc;
 		    if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
 		        matchLoc = mmr.minLoc;
-		        Log.w("BLINDLESSTEST","***" + description + "_esla: " + i + "-->" + "MinValue: " + String.valueOf(mmr.minVal).substring(0, String.valueOf(mmr.minVal).indexOf('.')));
+		        Log.w("BLINDLESSTEST","***" + description + "_esla: " + i + "-->" + "MinValue: " + String.valueOf(mmr.minVal));//.substring(0, String.valueOf(mmr.minVal).indexOf('.')));
 		    } else {
 		        matchLoc = mmr.maxLoc;
-		        Log.w("BLINDLESSTEST","***" + description + "_esla: " + i + "-->" + "MaxValue: " + String.valueOf(mmr.maxVal).substring(0, String.valueOf(mmr.maxVal).indexOf('.')));
+		        Log.w("BLINDLESSTEST","***" + description + "_esla: " + i + "-->" + "MaxValue: " + String.valueOf(mmr.maxVal));//.substring(0, String.valueOf(mmr.maxVal).indexOf('.')));
 		    }
 
 		    // / Show me what you got
@@ -112,6 +112,9 @@ public class ImageComparator extends Activity{
 	public double comparateSupIzq(Mat img_preprocesed, String templateFile, String outFile, String templateToWrite, int match_method, String description) {
 		try {
 		    Mat templ_preprocesed = getImageToProcess(templateFile);
+		    
+//	    	Imgproc.Canny(templ_preprocesed, templ_preprocesed, 50, 200);
+//		    Imgcodecs.imwrite(templateToWrite, templ_preprocesed);
 			
 			return comparate(img_preprocesed, templ_preprocesed, match_method, outFile, description);
 		} catch (Exception e) {
@@ -122,7 +125,7 @@ public class ImageComparator extends Activity{
 
 
 	public Mat getImageToProcess(String inFile) {
-		/*LEO LA IMAGEN Y EL TEMPLATE*/
+		/*LEO LA IMAGEN*/
 		Mat img_preprocesed = Imgcodecs.imread(inFile);
 
 		//Preprocess image to grayScale
