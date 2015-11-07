@@ -230,9 +230,9 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     	speak("mensaje principal");
 //    	List<String> textos = new ArrayList<String>();
 //    	textos.add("Pronuncie el comando detectar billete"
-//  			 + "si desea ingresar al módulo de reconocimiento de billetes");
+//  			 + "si desea ingresar al módulo de detección de billetes");
 //    	textos.add("Pronuncie el comando detectar texto"
-//	  	  	  	 + "si desea ingresar al módulo de detección de textos");
+//	  	  	  	 + "si desea ingresar al módulo de reconocimiento de textos");
 //    	textos.add("Pronuncie el comando salir si desea salir de la aplicación");
 //    	multipleSpeak(textos);
     }
