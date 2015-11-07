@@ -30,6 +30,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
     SurfaceView mSurfaceView;
     
 	private boolean cameraConfigured = false;
+	private boolean hasFocus = false;
 	
 	public CameraPreview(Context context, SurfaceView surfaceView, Camera camera, CommandCamera callbackOnTakePic) {
         super(context);
@@ -37,7 +38,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
         mCamera = camera;
         onTakePic = callbackOnTakePic;
         mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
-        
+        hasFocus = context.getPackageManager().hasSystemFeature("android.hardware.camera.autofocus");
         setFocusable(true);
         setFocusableInTouchMode(true);
         
@@ -50,14 +51,18 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
         	@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if (initTouch) {
-					mCamera.autoFocus(new AutoFocusCallback() {
-				        @Override
-				        public void onAutoFocus(boolean success, Camera camera) {
-				            if(success){
-				                camera.takePicture(null, null, mPictureCallback);
-				            }
-				        }
-				    });
+					if (hasFocus){
+						mCamera.autoFocus(new AutoFocusCallback() {
+					        @Override
+					        public void onAutoFocus(boolean success, Camera camera) {
+					            if(success){
+					                camera.takePicture(null, null, mPictureCallback);
+					            }
+					        }
+					    });
+					}else {
+						mCamera.takePicture(null, null, mPictureCallback);
+					}
 			    }
 				return true;
 			}	

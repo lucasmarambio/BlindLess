@@ -53,7 +53,8 @@ public class CameraActivity extends Activity {
     private static final int TTS_CHECK = 10;
 	protected static final double MINVAL_SUPPORTED = 4500000.0;
 	protected static final double MINVAL_SUPPORTED_2 = 3500000.0;
-	protected static final double MINVAL_SUPPORTED_3 = 2.000000E7;
+	protected static final double MINVAL_SUPPORTED_3 = 2.500000E7;
+	protected static final double MINVAL_SUPPORTED_4 = 2.000000E7;
     
     //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
@@ -273,7 +274,7 @@ public class CameraActivity extends Activity {
 				return rtn;
 			}
 			if (pattern.equals(CommonMethods.ATRAS_VAL)){
-				int rtn = matchSupIzq(billetes, templates, true, MINVAL_SUPPORTED_3);
+				int rtn = matchSupIzq(billetes, templates, true, MINVAL_SUPPORTED_4);
 				templates.clear();
 				return rtn;
 			}
