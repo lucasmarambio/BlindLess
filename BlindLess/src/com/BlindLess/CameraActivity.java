@@ -166,7 +166,7 @@ public class CameraActivity extends Activity {
 			// DATA_PATH = Path to the storage
 			// lang = for which the language data exists, usually "eng"
 			
-			baseApi.init("/storage/sdcard0/BlindLess/", "eng");
+			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
 //			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789%$@#,.()");
 //			baseApi.setVariable(TessBaseAPI.VAR_CHAR_BLACKLIST, "!^&*()_+=-[]}{;:'\"\\|~`,./<>?");
 			
