@@ -41,6 +41,7 @@ public class CameraActivity extends Activity {
 	private static final String COMANDO_VOLVER = "volver";
 	private static final String COMANDO_AYUDA = "ayuda";
 	private static final String COMANDO_REPETIR = "repetir";
+	private static final String COMANDO_ONSTOP = "onStop";
 	private Camera mCamera;
     private CameraPreview mPreview;
 	private Activity act;
@@ -89,7 +90,7 @@ public class CameraActivity extends Activity {
 	    
 	    Bundle bundle = getIntent().getExtras();
 	    actualModo = bundle.getString("modo");
-	    initializeServices(actualModo);
+	    initializeServices(actualModo, true);
         
 //		preview.setOnTouchListener(new View.OnTouchListener() {
 //			
@@ -102,7 +103,7 @@ public class CameraActivity extends Activity {
 //		});     
     }
 
-	private FrameLayout initializeServices(String modo) {
+	private FrameLayout initializeServices(String modo, boolean addView) {
 		Log.w("RODRILOG", ">> InitializeServices Camera");
 		CommandCamera onTakePicture;
 		if (modo.equals(CommonMethods.MODO_RECONOCIMIENTO_TEXTO)) {
@@ -117,7 +118,9 @@ public class CameraActivity extends Activity {
         // Create our Preview view and set it as the content of our activity.
 		if (mPreview == null) mPreview = new CameraPreview(this, (SurfaceView)findViewById(R.id.camera_preview), mCamera, onTakePicture);
 		mPreview.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-		((FrameLayout) findViewById(R.id.layout)).addView(mPreview);
+		if (addView){
+			((FrameLayout) findViewById(R.id.layout)).addView(mPreview);
+		}
 		mPreview.setKeepScreenOn(true);
         
         //Speech Recognition
@@ -228,7 +231,7 @@ public class CameraActivity extends Activity {
 //			if (MatchPatternsFor(CommonMethods.SUPIZQ_TEXT, billetes) > 0) return 1;
 //			if (MatchPatternsFor("infder", billetes) > 0) return 1;
 			
-			speak("El billete no pudo ser reconocido. Realice otra captura por favor."); //reinicializa el speech
+			speak("El billete no pudo ser reconocido. Realice una nueva captura por favor."); //reinicializa el speech
 			return endTakePic(billetes);
 		}
 
@@ -546,6 +549,14 @@ public class CameraActivity extends Activity {
             	};
         });
 		
+		commandDictionary.put(COMANDO_ONSTOP, new Command() {
+            public void runCommand() { 
+//            	speakWithoutRepetir("Dijiste volver"); 
+            	setResult(Activity.RESULT_CANCELED);
+            	finish();
+            	};
+        });
+		
 		commandDictionary.put(COMANDO_REPETIR, new Command() {
             public void runCommand() { 
             	speak("Dijiste repetir");
@@ -687,7 +698,13 @@ public class CameraActivity extends Activity {
 	    super.onStop();  // Always call the superclass method first
 
 	    //Release camera resources
-	    if(mCamera != null) mCamera.release();
+	    if(mCamera != null) { 
+			mCamera.stopPreview();
+			mPreview.setCamera(null);
+			mCamera.release();
+			mCamera = null;
+			mPreview = null;
+    	}
 	    cleanSpeecher();
 	    if(speaker != null) speaker.destroy();
 	    cleanTimer();
@@ -696,20 +713,20 @@ public class CameraActivity extends Activity {
 	@Override
 	protected void onRestart() {
 	    super.onRestart();  // Always call the superclass method first	 
-	    
+    	commandDictionary.get(COMANDO_ONSTOP).runCommand();
 	 // The activity is either being restarted or started for the first time
 	    // so this is where we should make sure that GPS is enabled
-	    if (speaker == null || speaker.initFinish){ 
-	    	speaker = new Speaker(this, "");
-		    speaker.runOnInit = new Command() {
-		    	public void runCommand() { 
-		    		mensajePrincipal();
-		    		startRecognition();
- 		    	};
-	        };
-	    }
-	    initializeServices(actualModo);
-	    Log.i("MainActivity","onRestartLeaving");
+//	    if (speaker == null || speaker.initFinish){ 
+//	    	speaker = new Speaker(this, "");
+//		    speaker.runOnInit = new Command() {
+//		    	public void runCommand() { 
+//		    		mensajePrincipal();
+//		    		startRecognition();
+// 		    	};
+//	        };
+//	    }
+//	    initializeServices(actualModo, false);
+//	    Log.i("MainActivity","onRestartLeaving");
 	}
 	
 	@Override
