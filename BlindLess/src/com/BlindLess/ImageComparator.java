@@ -1,7 +1,9 @@
 package com.BlindLess;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.opencv.android.Utils;
@@ -24,6 +26,7 @@ import android.util.Log;
 
 public class ImageComparator extends Activity{
 
+	private Map<Integer, Mat> pictureCache = new HashMap<Integer, Mat>();
 	
 	public double comparate(Mat img_preprocesed, Mat templ_preprocesed, int match_method,String outFile, String description) {
 		
@@ -61,17 +64,13 @@ public class ImageComparator extends Activity{
 		for (double i = 0; i < 15; i++) {
 			Mat img_resized = img_preprocesed.clone();
 			Mat img_cloned = img_preprocesed.clone();
-			double newWidth = img_preprocesed.size().width * (1 - (i * 0.05));
-			double newHeight = img_preprocesed.size().height * (1 - (i * 0.05));
-			Imgproc.resize(img_resized, img_resized, new Size(newWidth, newHeight));
+			img_resized = resizeAndProcessPicture(img_preprocesed, i, img_resized);
 			
-			double r = img_preprocesed.width() / newWidth;
-			
+			double r = img_preprocesed.width() / img_resized.width();
+
 			if (img_resized.size().height < templ_preprocesed.size().height || img_resized.size().width < templ_preprocesed.size().width) {
 				break;
 			}
-			
-			Imgproc.Canny(img_resized, img_resized, 50, 200);
 			
 		    int result_cols = img_resized.cols() - templ_preprocesed.cols() + 1;
 		    int result_rows = img_resized.rows() - templ_preprocesed.rows() + 1;
@@ -106,6 +105,25 @@ public class ImageComparator extends Activity{
 		    img_resized.release();
 		}
 		return found;
+	}
+
+
+	private Mat resizeAndProcessPicture(Mat img_preprocesed, double i, Mat img_resized) {
+		//Search image on cache
+		if (pictureCache.containsKey((int) i)) {
+			img_resized.release();
+			return pictureCache.get((int) i).clone();
+		}
+		
+		//Resize image
+		double newWidth = img_preprocesed.size().width * (1 - (i * 0.05));
+		double newHeight = img_preprocesed.size().height * (1 - (i * 0.05));
+		Imgproc.resize(img_resized, img_resized, new Size(newWidth, newHeight));
+		Imgproc.Canny(img_resized, img_resized, 50, 200);
+		
+		//Update Cache
+		pictureCache.put((int) i, img_resized.clone());
+		return img_resized;
 	}
 
 
@@ -289,6 +307,11 @@ public class ImageComparator extends Activity{
 	    if (angle < -45.)
 	        minRect.angle += 90.;	  
 		return minRect;
+	}
+
+
+	public void cleanCache() {
+		pictureCache.clear();
 	}
 	
 	
