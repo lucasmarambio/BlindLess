@@ -228,7 +228,7 @@ public class CameraActivity extends Activity {
 //			if (MatchPatternsFor(CommonMethods.SUPIZQ_TEXT, billetes) > 0) return 1;
 //			if (MatchPatternsFor("infder", billetes) > 0) return 1;
 			
-			speak("El billete no pudo ser reconocido. Realice otra captura por favor."); //reinicializa el speech
+			speak("El billete no pudo ser reconocido. Realice una nueva captura por favor."); //reinicializa el speech
 			return endTakePic(billetes);
 		}
 
