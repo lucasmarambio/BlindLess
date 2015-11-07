@@ -352,6 +352,7 @@ public class CameraActivity extends Activity {
 					bestMatch.release();
 				}
 				img_billete.release();
+				comparator.cleanCache();
 			}
 			
 			return ReadBilletesLeidos(billetesLeidos);
