@@ -53,6 +53,7 @@ public class CameraActivity extends Activity {
     private static final int TTS_CHECK = 10;
 	protected static final double MINVAL_SUPPORTED = 4500000.0;
 	protected static final double MINVAL_SUPPORTED_2 = 3500000.0;
+	protected static final double MINVAL_SUPPORTED_3 = 2.000000E7;
     
     //Speech recognition fields
     private SpeechRecognizer mSpeechRecognizer;
@@ -217,9 +218,11 @@ public class CameraActivity extends Activity {
 			billetes.add(pictureFile.getPath());	
 			
 			//Old Method to detect supizq value from picture
-			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return endTakePic(billetes);
-			if (MatchPatternsFor(CommonMethods.MEDIO_TEXT, billetes) > 0)  return endTakePic(billetes);
-			if (MatchPatternsFor(CommonMethods.INFDER_VAL, billetes) > 0) return endTakePic(billetes);
+//			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return endTakePic(billetes);
+			if (MatchPatternsFor(CommonMethods.FRENTE_VAL, billetes) > 0) return endTakePic(billetes);
+			if (MatchPatternsFor(CommonMethods.ATRAS_VAL, billetes) > 0) return endTakePic(billetes);
+//			if (MatchPatternsFor(CommonMethods.MEDIO_TEXT, billetes) > 0)  return endTakePic(billetes);
+//			if (MatchPatternsFor(CommonMethods.INFDER_VAL, billetes) > 0) return endTakePic(billetes);
 //			if (MatchPatternsFor(CommonMethods.MEDIO_VAL, billetes) > 0) return 1;
 //			if (MatchPatternsFor(CommonMethods.SUPIZQ_TEXT, billetes) > 0) return 1;
 //			if (MatchPatternsFor("infder", billetes) > 0) return 1;
@@ -264,6 +267,16 @@ public class CameraActivity extends Activity {
 //				return matchAndRead(billetes, templates, false, CommonMethods.NUMERO_BILLETE, readSupIzqCommand, false);
 //			}
 //			else 
+			if (pattern.equals(CommonMethods.FRENTE_VAL)){
+				int rtn = matchSupIzq(billetes, templates, true, MINVAL_SUPPORTED_3);
+				templates.clear();
+				return rtn;
+			}
+			if (pattern.equals(CommonMethods.ATRAS_VAL)){
+				int rtn = matchSupIzq(billetes, templates, true, MINVAL_SUPPORTED_3);
+				templates.clear();
+				return rtn;
+			}
 			if (pattern.equals(CommonMethods.SUPIZQ_VAL)){
 				int rtn = matchSupIzq(billetes, templates, true, MINVAL_SUPPORTED);
 				templates.clear();
@@ -437,7 +450,7 @@ public class CameraActivity extends Activity {
 		}
 		
 		private void addTemplatesValue(String value, String pattern, List<String> templates) {
-			templates.add(value + "_" + pattern + "_" + 40);
+			templates.add(value + "_" + pattern);// + "_" + 10);
 //			templates.add(value + "_" + pattern + "_" + 60);
 //			templates.add(value + "_" + pattern + "_" + 80);
 		}
