@@ -229,14 +229,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     
     public void mensajePrincipal(){
     	Log.w("RODRILOG", "mensajePrincipal");
-    	speak("mensaje principal");
-//    	List<String> textos = new ArrayList<String>();
-//    	textos.add("Pronuncie el comando detectar billete"
-//  			 + "si desea ingresar al módulo de detección de billetes");
-//    	textos.add("Pronuncie el comando detectar texto"
-//	  	  	  	 + "si desea ingresar al módulo de reconocimiento de textos");
-//    	textos.add("Pronuncie el comando salir si desea salir de la aplicación");
-//    	multipleSpeak(textos);
+//    	speak("mensaje principal");
+    	List<String> textos = new ArrayList<String>();
+    	textos.add("Pronuncie el comando detectar billete"
+  			 + "si desea ingresar al módulo de detección de billetes");
+    	textos.add("Pronuncie el comando detectar texto"
+	  	  	  	 + "si desea ingresar al módulo de reconocimiento de textos");
+    	textos.add("Pronuncie el comando salir si desea salir de la aplicación");
+    	multipleSpeak(textos);
     }
     
   //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.

@@ -147,8 +147,9 @@ public class CameraActivity extends Activity {
 
 		@Override
 		public int runCommand(byte[] data, Camera camera) {
-			
+
 			ImageComparator textComparator = new ImageComparator();
+			
 			
 			File pictureFile = CommonMethods.getOutputMediaFile(MEDIA_TYPE_IMAGE);
 			if (pictureFile == null) {
@@ -190,6 +191,10 @@ public class CameraActivity extends Activity {
 			speak(recognizedText, true);
 			
 			speak("Texto leído.", false);
+			
+			bitmap.recycle();
+			baseApi.clear();
+			
 			initializeSpeech();
 			startRecognition();
 			return 0;
@@ -547,7 +552,7 @@ public class CameraActivity extends Activity {
             	textos.add("Sujetar firmemente el celular");
             	textos.add("Alinear y centrar con el objeto a escanear");
             	textos.add("Distanciar el celular del objeto entre 27 y 32 centímetros");
-            	textos.add("Aguardar la señal de reconocimiento efectivo"); 
+            	textos.add("Presionar la pantalla para realizar la captura."); 
             	multipleSpeak(textos);
             	startRecognition();
             	};
@@ -624,9 +629,9 @@ public class CameraActivity extends Activity {
 	}
 
     public void mensajePrincipal(){
-//		speak("Pronuncie el comando ayuda para iniciar la guía de"
-//			+ "detección o el comando volver para retornar al Menú principal");
-    	speak("Mensaje principal", true);
+		speak("Pronuncie el comando ayuda para iniciar la guía de"
+			+ "detección o el comando volver para retornar al Menú principal", true);
+//    	speak("Mensaje principal", true);
     }
 	
     //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.
