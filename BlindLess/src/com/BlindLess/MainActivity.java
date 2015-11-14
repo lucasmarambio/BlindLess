@@ -6,6 +6,7 @@ import android.speech.tts.TextToSpeech;
 import android.support.v4.view.GestureDetectorCompat;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.WindowManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,6 +60,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 			
 			super.onCreate(savedInstanceState);
 			setContentView(R.layout.activity_main);
+			getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 			
 			mIsSpeaking = true;
 	

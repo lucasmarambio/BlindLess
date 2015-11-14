@@ -63,6 +63,7 @@ public class CameraActivity extends Activity {
     private boolean mIsSpeaking;  
     private Map<String, Command> commandDictionary = new HashMap<String, Command>();
     private String actualModo;
+    private String textoARepetir;
     
     //Timer
     private Timer timer;
@@ -77,6 +78,7 @@ public class CameraActivity extends Activity {
 		act = this;
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_camera);
         handler = new android.os.Handler();
         
@@ -116,7 +118,7 @@ public class CameraActivity extends Activity {
 		if (mCamera == null) mCamera = getCameraInstance();
 
         // Create our Preview view and set it as the content of our activity.
-		if (mPreview == null) mPreview = new CameraPreview(this, (SurfaceView)findViewById(R.id.camera_preview), mCamera, onTakePicture);
+		if (mPreview == null) mPreview = new CameraPreview(this, (SurfaceView)findViewById(R.id.camera_preview), mCamera, onTakePicture, onReturnCallback);
 		mPreview.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		if (addView){
 			((FrameLayout) findViewById(R.id.layout)).addView(mPreview);
@@ -130,6 +132,16 @@ public class CameraActivity extends Activity {
         
 		return ((FrameLayout) findViewById(R.id.layout));
 	}
+	
+	private Command onReturnCallback = new Command(){
+
+		@Override
+		public void runCommand() {
+			cleanSpeecher();
+        	commandDictionary.get(COMANDO_VOLVER).runCommand();
+		}
+		
+	};
 	
 	private CommandCamera textOnTakePicture = new CommandCamera(){
 
@@ -175,9 +187,9 @@ public class CameraActivity extends Activity {
 			
 			baseApi.setImage(bitmap);
 			String recognizedText = baseApi.getUTF8Text();
-			speak(recognizedText);
+			speak(recognizedText, true);
 			
-			speak("Texto leído.");
+			speak("Texto leído.", false);
 			initializeSpeech();
 			startRecognition();
 			return 0;
@@ -231,7 +243,7 @@ public class CameraActivity extends Activity {
 //			if (MatchPatternsFor(CommonMethods.SUPIZQ_TEXT, billetes) > 0) return 1;
 //			if (MatchPatternsFor("infder", billetes) > 0) return 1;
 			
-			speak("El billete no pudo ser reconocido. Realice una nueva captura por favor."); //reinicializa el speech
+			speak("El billete no pudo ser reconocido. Realice una nueva captura por favor.", false); //reinicializa el speech
 			return endTakePic(billetes);
 		}
 
@@ -385,7 +397,7 @@ public class CameraActivity extends Activity {
 
 		private int leerBilleteFinal(String billeteReconocido) {
 			Log.w("BLINDLESSTEST","Finalmente es de: " + billeteReconocido);
-			speak("Es un billete de: " + billeteReconocido + " pesos");
+			speak("Es un billete de: " + billeteReconocido + " pesos", true);
 			return 1;
 		}
 
@@ -444,7 +456,7 @@ public class CameraActivity extends Activity {
 				
 				if (maxVal > minvalSupported) {
 					Log.w("BLINDLESSTEST","Es un billete de: " + templateGanador + " MaxVal: " + maxVal);
-					speak("Es un billete de: " + templateGanador + " pesos");
+					speak("Es un billete de: " + templateGanador + " pesos", true);
 					return 1;
 				}
 				
@@ -559,7 +571,8 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put(COMANDO_REPETIR, new Command() {
             public void runCommand() { 
-            	speak("Dijiste repetir");
+            	speak("Dijiste repetir", false);
+            	speak(textoARepetir, false);
             	startRecognition();
             	};
         });
@@ -574,7 +587,7 @@ public class CameraActivity extends Activity {
 		
 		commandDictionary.put("nada", new Command() {
             public void runCommand() { 
-            		speak("Comando de voz no reconocido");
+            		speak("Comando de voz no reconocido", false);
             		startRecognition();
             	};
         });
@@ -590,12 +603,17 @@ public class CameraActivity extends Activity {
 		repetirMensajePrincipal(CommonMethods.DECIR_MSJ_PRINCIPAL, CommonMethods.REPETIR_MSJ_PRINCIPAL);
 	}
 	
-	public void speak(String text){
+	public void speak(String text, boolean updateTextoARepetir){
 		mIsSpeaking = true;
 		cleanTimer();
 		if(speaker != null) speaker.speak(text);
 		mIsSpeaking = false;
 		repetirMensajePrincipal(CommonMethods.DECIR_MSJ_PRINCIPAL, CommonMethods.REPETIR_MSJ_PRINCIPAL);
+		
+		//Update texto a repetir
+		if (updateTextoARepetir){
+			textoARepetir = text;
+		}
 	}
 	
 	public void speakWithoutRepetir(String text){
@@ -608,7 +626,7 @@ public class CameraActivity extends Activity {
     public void mensajePrincipal(){
 //		speak("Pronuncie el comando ayuda para iniciar la guía de"
 //			+ "detección o el comando volver para retornar al Menú principal");
-    	speak("Mensaje principal");
+    	speak("Mensaje principal", true);
     }
 	
     //repite el mensaje principal cada x cantidad de segundos, si no hubo interacción del usuario.

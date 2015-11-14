@@ -24,6 +24,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private CommandCamera onTakePic;
+    private Command onReturnCallback;
     private boolean initTouch = true;
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
@@ -34,11 +35,12 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 	private boolean cameraConfigured = false;
 	private boolean hasFocus = false;
 	
-	public CameraPreview(Context context, SurfaceView surfaceView, Camera camera, CommandCamera callbackOnTakePic) {
+	public CameraPreview(Context context, SurfaceView surfaceView, Camera camera, CommandCamera callbackOnTakePic, Command callbackOnReturn) {
         super(context);
         mSurfaceView = surfaceView;
         mCamera = camera;
         onTakePic = callbackOnTakePic;
+        onReturnCallback = callbackOnReturn;
         mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
         hasFocus = context.getPackageManager().hasSystemFeature("android.hardware.camera.autofocus");
         setFocusable(true);
@@ -54,15 +56,16 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 
 			@Override
 			public boolean onLongClick(View v) {
-				// TODO Auto-generated method stub
+				onReturnCallback.runCommand();
+				initTouch = false;
 				return false;
 			}
         	
         });
         
-        this.setOnTouchListener(new View.OnTouchListener() {
+        this.setOnClickListener(new View.OnClickListener() {
         	@Override
-			public boolean onTouch(View v, MotionEvent event) {
+			public void onClick(View v) {
 				if (initTouch) {
 					if (hasFocus){
 						mCamera.autoFocus(new AutoFocusCallback() {
@@ -77,8 +80,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 						mCamera.takePicture(null, null, mPictureCallback);
 					}
 			    }
-				return true;
-			}	
+			}
 		}); 
     }
 
