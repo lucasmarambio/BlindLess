@@ -244,9 +244,9 @@ public class CameraActivity extends Activity {
 			billetes.add(pictureFile.getPath());	
 			
 			//Old Method to detect supizq value from picture
-//			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return endTakePic(billetes);
 			if (MatchPatternsFor(CommonMethods.FRENTE_VAL, billetes) > 0) return endTakePic(billetes, pictureFile);
 			if (MatchPatternsFor(CommonMethods.ATRAS_VAL, billetes) > 0) return endTakePic(billetes, pictureFile);
+			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return endTakePic(billetes, pictureFile);
 //			if (MatchPatternsFor(CommonMethods.MEDIO_TEXT, billetes) > 0)  return endTakePic(billetes);
 //			if (MatchPatternsFor(CommonMethods.INFDER_VAL, billetes) > 0) return endTakePic(billetes);
 //			if (MatchPatternsFor(CommonMethods.MEDIO_VAL, billetes) > 0) return 1;
