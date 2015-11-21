@@ -59,7 +59,7 @@ public class CameraActivity extends Activity {
     private Intent mSpeechRecognizerIntent;
     private boolean mIsSpeaking;  
     private Map<String, Command> commandDictionary = new HashMap<String, Command>();
-    private String actualModo;
+    private static String actualModo;
     private String textoARepetir;
     
     //Timer
@@ -499,8 +499,12 @@ public class CameraActivity extends Activity {
 	    
 	  //set camera to continually auto-focus
 	    Camera.Parameters params = camera.getParameters();
+	    if (actualModo.equals(CommonMethods.MODO_RECONOCIMIENTO_BILLETE)) {
+	    	params.setPictureSize(640, 480);
+	    }
 	    if (params.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
 	        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+	        
 	    } else {
 	        //Choose another supported mode
 	    }
@@ -646,12 +650,12 @@ public class CameraActivity extends Activity {
   		   	public void run() {
   		   		handler.post(new Runnable() {
   		   			public void run() {
-  		   				Log.w("RODRILOG", ">> Repitiendopapi Camera");
+  		   				Log.w("RODRILOG", ">> Repitiendo Camera");
   		   				cleanSpeecher();
   		   				mensajePrincipal();
   		   				initializeSpeech();
   		   				startRecognition();
-  		   				Log.w("RODRILOG", "<< Repitiendopapi Camera");
+  		   				Log.w("RODRILOG", "<< Repitiendo Camera");
   		   			};
   		   		});
   		   	}

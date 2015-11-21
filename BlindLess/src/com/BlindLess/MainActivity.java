@@ -20,10 +20,7 @@ import org.opencv.android.OpenCVLoader;
 import com.BlindLess.R;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -85,7 +82,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 			initializeSpeech();
 		
 		} catch (Exception e) {
-			// TODO: hacer algo
+			finish();
 		}	
 		
 	}
@@ -248,7 +245,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
   		   	public void run() {
   		   		handler.post(new Runnable() {
   		   			public void run() {
-  		   				Log.w("RODRILOG", ">> Repitiendopapi");
+  		   				Log.w("RODRILOG", ">> Repitiendo");
   		   				cleanSpeecher();
 		   				mensajePrincipal();
 		   				initializeSpeech();
@@ -328,7 +325,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     	 speaker = new Speaker(this, "Usted ha vuelto al menu principal");
     	 	speaker.runOnInit = new Command() {
     	 		public void runCommand() { 
-    	 			mensajePrincipal();
+    	 			repetirMensajePrincipal(CommonMethods.DECIR_MSJ_PRINCIPAL, CommonMethods.REPETIR_MSJ_PRINCIPAL);
     	 			startRecognition();
  		    	};
 	        };
