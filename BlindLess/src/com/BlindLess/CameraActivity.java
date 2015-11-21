@@ -16,7 +16,6 @@ import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -44,9 +43,7 @@ public class CameraActivity extends Activity {
 	private static final String COMANDO_ONSTOP = "onStop";
 	private Camera mCamera;
     private CameraPreview mPreview;
-	private Activity act;
-	private Context ctx;
-    public static final int MEDIA_TYPE_IMAGE = 1;
+	public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
     
 	//text-to-speech fields
@@ -74,8 +71,6 @@ public class CameraActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         
     	super.onCreate(savedInstanceState);
-		ctx = this;
-		act = this;
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -188,6 +183,7 @@ public class CameraActivity extends Activity {
 			
 			baseApi.setImage(bitmap);
 			String recognizedText = baseApi.getUTF8Text();
+			Log.w("BLINDLESSTEST", recognizedText);
 			speak(recognizedText, true);
 			
 			speak("Texto leído.", false);
@@ -198,6 +194,14 @@ public class CameraActivity extends Activity {
 			initializeSpeech();
 			startRecognition();
 			return 0;
+		}
+
+		private String removeInvalidCharacters(String recognizedText) {
+			String finalText = "";
+			for (String word : recognizedText.split(" ")) {
+				finalText = finalText + " " + word.replaceAll("[<>\\[\\]-!^&*()}{'\"_+=]", "");
+			}
+			return finalText;
 		}
 
 		
@@ -339,10 +343,9 @@ public class CameraActivity extends Activity {
 			baseApi.init("/storage/sdcard0/BlindLess/", "spa");
 			baseApi.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, whiteList);
 			double maxVal = 0.0;
-			String templateGanador = "";
 			ArrayList<String> billetesLeidos = new ArrayList<String>();
 			for (String billeteToCheck : billetes) {
-				Mat img_billete = comparator.getImageToProcess(billeteToCheck);
+				Mat img_billete = comparator.getImageToProcess(billeteToCheck, true);
 				for (String template : templates) {
 					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";
 					String outFile = "storage/sdcard0/BlindLess/Resultados/Resultadomedio" + 
@@ -366,7 +369,7 @@ public class CameraActivity extends Activity {
 
 					//Save best match
 					if (bestMatch.getMaxVal() > maxVal) {
-						templateGanador = template.substring(0, template.indexOf('_'));
+						template.substring(0, template.indexOf('_'));
 						maxVal = bestMatch.getMaxVal();
 					}
 					bestMatch.release();
@@ -417,7 +420,7 @@ public class CameraActivity extends Activity {
 				actualTemplate = templates.get(0).substring(0, templates.get(0).indexOf('_'));
 				String descripcionBillete = billeteToCheck.substring(billeteToCheck.length() - 12, billeteToCheck.length() - 1);
 				ImageComparator comparator = new ImageComparator();
-				Mat img_billete = comparator.getImageToProcess(billeteToCheck);
+				Mat img_billete = comparator.getImageToProcess(billeteToCheck, true);
 				for (String template : templates) {	
 					templateNumber = template.substring(0, template.indexOf('_'));
 					String templateToCheck = "storage/sdcard0/BlindLess/Templates/" + template + ".jpg";

@@ -2,9 +2,7 @@ package com.BlindLess;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
@@ -21,6 +19,7 @@ import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.util.Log;
 
@@ -129,7 +128,7 @@ public class ImageComparator extends Activity{
 
 	public double comparateSupIzq(Mat img_preprocesed, String templateFile, String outFile, String templateToWrite, int match_method, String description) {
 		try {
-		    Mat templ_preprocesed = getImageToProcess(templateFile);
+		    Mat templ_preprocesed = getImageToProcess(templateFile, false);
 		    
 //	    	Imgproc.Canny(templ_preprocesed, templ_preprocesed, 50, 200);
 //		    Imgcodecs.imwrite(templateToWrite, templ_preprocesed);
@@ -142,9 +141,20 @@ public class ImageComparator extends Activity{
 	}
 
 
-	public Mat getImageToProcess(String inFile) {
+	public Mat getImageToProcess(String inFile, boolean reduceResolution) {
 		/*LEO LA IMAGEN*/
-		Mat img_preprocesed = Imgcodecs.imread(inFile);
+		Mat img_preprocesed = null;
+		
+		if (reduceResolution) {
+			BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inSampleSize = 2;
+			Bitmap bitmap = BitmapFactory.decodeFile(inFile, options);
+			img_preprocesed = new Mat (bitmap.getHeight(), bitmap.getWidth(), CvType.CV_8U, new Scalar(4));
+			Utils.bitmapToMat(bitmap, img_preprocesed);
+			bitmap.recycle();
+		}else {
+			img_preprocesed = Imgcodecs.imread(inFile);
+		}
 
 		//Preprocess image to grayScale
 //			Imgproc.resize(img_preprocesed, img_preprocesed, new Size(620, 344));
@@ -155,7 +165,7 @@ public class ImageComparator extends Activity{
 	public BestMatches readSupIzq(Mat img_billete, String templateToCheck, String outFile){
 			
 		/*LEO IMAGEN ORIGINAL (BILLETE) Y TEMPLATE ORIGINAL*/
-		Mat img_template = getImageToProcess(templateToCheck);
+		Mat img_template = getImageToProcess(templateToCheck, false);
 		
 		/*Busco el punto donde mejor matchee el template y el billete*/
 		MinMaxLocResult found = resizeToFindBestMatch(img_billete,
@@ -266,7 +276,7 @@ public class ImageComparator extends Activity{
 		img_preprocesed.release();
 		rotImage.release();
 		rotated.release();
-		
+//		
 		return path_texto;
 	}
 	
