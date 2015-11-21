@@ -499,9 +499,8 @@ public class CameraActivity extends Activity {
 	    
 	  //set camera to continually auto-focus
 	    Camera.Parameters params = camera.getParameters();
-	    if (actualModo.equals(CommonMethods.MODO_RECONOCIMIENTO_BILLETE)) {
-	    	params.setPictureSize(640, 480);
-	    }
+    	params.setPictureSize(640, 480);
+    	
 	    if (params.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
 	        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
 	        
