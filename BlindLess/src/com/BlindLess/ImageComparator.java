@@ -59,49 +59,77 @@ public class ImageComparator extends Activity{
 	private MinMaxLocResult resizeToFindBestMatch(Mat img_preprocesed,
 			Mat templ_preprocesed, int match_method, String description) {
 		MinMaxLocResult found = new MinMaxLocResult();
+		int[] angleToSearch = new int[]{ 0,180 };
 		found.maxVal = 0.0;
-		for (double i = 0; i < 15; i++) {
-			Mat img_resized = img_preprocesed.clone();
-			Mat img_cloned = img_preprocesed.clone();
-			img_resized = resizeAndProcessPicture(img_preprocesed, i, img_resized);
+		Mat res = null;
+		for (int angle : angleToSearch) {
+			switch (angle % 360) {
+	            case 0:
+	            	res = templ_preprocesed;
+	                break;
+	            case 90:
+	            	res = templ_preprocesed.t();
+	                Core.flip(res, res, 1);
+	                break;
+	            case 180:
+	            	Core.flip(templ_preprocesed, res, -1);
+	                break;
+	            case 270:
+	                res = templ_preprocesed.t();
+	                Core.flip(res, res, 0);
+	                break;
+//	            default:
+//	                cv::Mat r = cv::getRotationMatrix2D({image.cols/2.0F, image.rows/2.0F}, degrees, 1.0);
+//	                int len = std::max(image.cols, image.rows);
+//	                cv::warpAffine(image, res, r, cv::Size(len, len));
+//	                break; //image size will change
+	        }
 			
-			double r = img_preprocesed.width() / img_resized.width();
-
-			if (img_resized.size().height < templ_preprocesed.size().height || img_resized.size().width < templ_preprocesed.size().width) {
-				break;
+			templ_preprocesed = res;
+			for (double i = 0; i < 15; i++) {
+				Mat img_resized = img_preprocesed.clone();
+				Mat img_cloned = img_preprocesed.clone();
+				img_resized = resizeAndProcessPicture(img_preprocesed, i, img_resized);
+				
+				double r = img_preprocesed.width() / img_resized.width();
+	
+				if (img_resized.size().height < templ_preprocesed.size().height || img_resized.size().width < templ_preprocesed.size().width) {
+					break;
+				}
+				
+			    int result_cols = img_resized.cols() - templ_preprocesed.cols() + 1;
+			    int result_rows = img_resized.rows() - templ_preprocesed.rows() + 1;
+			    Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
+				Imgproc.matchTemplate(img_resized, templ_preprocesed, result, match_method);
+				// / Localizing the best match with minMaxLoc
+			    MinMaxLocResult mmr = Core.minMaxLoc(result);
+			    
+			    Point matchLoc;
+			    if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
+			        matchLoc = mmr.minLoc;
+			        Log.w("BLINDLESSTEST","***" + description + "_esla: " + i + "-->" + "MinValue: " + String.valueOf(mmr.minVal));//.substring(0, String.valueOf(mmr.minVal).indexOf('.')));
+			    } else {
+			        matchLoc = mmr.maxLoc;
+			        Log.w("BLINDLESSTEST","***" + description + "_esla: " + i + "-->" + "MaxValue: " + String.valueOf(mmr.maxVal));//.substring(0, String.valueOf(mmr.maxVal).indexOf('.')));
+			    }
+	
+			    // / Show me what you got
+	//		    Imgproc.rectangle(img_cloned, matchLoc, new Point(matchLoc.x + templ_preprocesed.size().width,
+	//		            matchLoc.y + templ_preprocesed.size().height), new Scalar(0, 255,0));
+	
+	//		        // Save the visualized detection.
+	//		        Imgcodecs.imwrite(outFile + "-" + i + ".jpg", img_resized);
+			    
+			    if (mmr.maxVal > found.maxVal) {
+					found.maxVal = mmr.maxVal;
+					found.maxLoc = mmr.maxLoc;
+					found.minVal = r; //No quiero guardar el minVal.. solo el width
+				}
+			    
+			    img_cloned.release();
+			    img_resized.release();
 			}
 			
-		    int result_cols = img_resized.cols() - templ_preprocesed.cols() + 1;
-		    int result_rows = img_resized.rows() - templ_preprocesed.rows() + 1;
-		    Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
-			Imgproc.matchTemplate(img_resized, templ_preprocesed, result, match_method);
-			// / Localizing the best match with minMaxLoc
-		    MinMaxLocResult mmr = Core.minMaxLoc(result);
-		    
-		    Point matchLoc;
-		    if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
-		        matchLoc = mmr.minLoc;
-		        Log.w("BLINDLESSTEST","***" + description + "_esla: " + i + "-->" + "MinValue: " + String.valueOf(mmr.minVal));//.substring(0, String.valueOf(mmr.minVal).indexOf('.')));
-		    } else {
-		        matchLoc = mmr.maxLoc;
-		        Log.w("BLINDLESSTEST","***" + description + "_esla: " + i + "-->" + "MaxValue: " + String.valueOf(mmr.maxVal));//.substring(0, String.valueOf(mmr.maxVal).indexOf('.')));
-		    }
-
-		    // / Show me what you got
-//		    Imgproc.rectangle(img_cloned, matchLoc, new Point(matchLoc.x + templ_preprocesed.size().width,
-//		            matchLoc.y + templ_preprocesed.size().height), new Scalar(0, 255,0));
-
-//		        // Save the visualized detection.
-//		        Imgcodecs.imwrite(outFile + "-" + i + ".jpg", img_resized);
-		    
-		    if (mmr.maxVal > found.maxVal) {
-				found.maxVal = mmr.maxVal;
-				found.maxLoc = mmr.maxLoc;
-				found.minVal = r; //No quiero guardar el minVal.. solo el width
-			}
-		    
-		    img_cloned.release();
-		    img_resized.release();
 		}
 		return found;
 	}
