@@ -30,6 +30,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 	private static final String COMANDO_REPETIR = "repetir";
 	private static final String COMANDO_DETECTAR_BILLETE = "detectar billete";
 	private static final String COMANDO_DETECTAR_TEXTO = "detectar texto";
+	public static boolean tapDetected = false;
 	
 	//text-to-speech fields
     public Speaker speaker; 
@@ -319,7 +320,9 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     	 if (resultCode == Activity.RESULT_CANCELED) {
     		 finish();
     		 break;
-    	 }
+    	 }	
+    	 
+    	 tapDetected = false;
     	 
     	 //Reinitialize services
     	 speaker = new Speaker(this, "Usted ha vuelto al menu principal");
@@ -406,11 +409,13 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
     @Override
     public boolean onDoubleTap(MotionEvent event) {
+    	if (tapDetected) return false;
     	Log.w("RODRILOG", "onDoubleTap");
         if(mIsSpeaking) {
         	Log.d(DEBUG_TAG, "onDoubleTap: Silenciar Speaker" + event.toString());       	
         } else {
         	Log.d(DEBUG_TAG, "onDoubleTap: Módulo Texto" + event.toString());
+        	tapDetected = true;
         	cleanSpeecher();
         	commandDictionary.get(COMANDO_DETECTAR_TEXTO).runCommand();
         }
@@ -426,12 +431,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent event) {
+    	if (tapDetected) return false;
     	Log.w("RODRILOG", "onSingleTapConfirmed");
         if(mIsSpeaking) {
         	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Silenciar Speaker" + event.toString());
         }
         else {
         	Log.d(DEBUG_TAG, "onSingleTapConfirmed: Módulo Billete" + event.toString());
+        	tapDetected = true;
         	cleanSpeecher();
         	commandDictionary.get(COMANDO_DETECTAR_BILLETE).runCommand();
         }
