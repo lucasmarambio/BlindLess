@@ -190,6 +190,7 @@ public class CameraActivity extends Activity {
 			
 			bitmap.recycle();
 			baseApi.clear();
+			pictureFile.delete();
 			
 			initializeSpeech();
 			startRecognition();
@@ -244,8 +245,8 @@ public class CameraActivity extends Activity {
 			
 			//Old Method to detect supizq value from picture
 //			if (MatchPatternsFor(CommonMethods.SUPIZQ_VAL, billetes) > 0) return endTakePic(billetes);
-			if (MatchPatternsFor(CommonMethods.FRENTE_VAL, billetes) > 0) return endTakePic(billetes);
-			if (MatchPatternsFor(CommonMethods.ATRAS_VAL, billetes) > 0) return endTakePic(billetes);
+			if (MatchPatternsFor(CommonMethods.FRENTE_VAL, billetes) > 0) return endTakePic(billetes, pictureFile);
+			if (MatchPatternsFor(CommonMethods.ATRAS_VAL, billetes) > 0) return endTakePic(billetes, pictureFile);
 //			if (MatchPatternsFor(CommonMethods.MEDIO_TEXT, billetes) > 0)  return endTakePic(billetes);
 //			if (MatchPatternsFor(CommonMethods.INFDER_VAL, billetes) > 0) return endTakePic(billetes);
 //			if (MatchPatternsFor(CommonMethods.MEDIO_VAL, billetes) > 0) return 1;
@@ -253,10 +254,11 @@ public class CameraActivity extends Activity {
 //			if (MatchPatternsFor("infder", billetes) > 0) return 1;
 			
 			speak("El billete no pudo ser reconocido. Realice una nueva captura por favor.", false); //reinicializa el speech
-			return endTakePic(billetes);
+			return endTakePic(billetes, pictureFile);
 		}
 
-		private int endTakePic(List<String> billetes) {
+		private int endTakePic(List<String> billetes, File pictureFile) {
+			pictureFile.delete();
 			initializeSpeech();
 			startRecognition();
 			billetes.clear();
